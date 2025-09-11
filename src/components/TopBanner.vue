@@ -77,7 +77,7 @@ onMounted(() => {
 
     img {
       display: block;
-      width: 110%;
+      width: 120%;
       height: 100%;
       object-fit: cover;
       transition: all 0.2s ease-in;

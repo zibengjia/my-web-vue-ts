@@ -1,11 +1,24 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { homeRoute } from './modules/home'
-
-const routers: RouteRecordRaw[] = [homeRoute]
-
+import { adminRoutes } from './routes/adminRoutes'
+import { homeRoutes } from './routes/homeRotes'
+import { loginRoutes } from './routes/loginRoutes'
+const routes: RouteRecordRaw[] = [
+  adminRoutes,
+  homeRoutes,
+  loginRoutes,
+  {
+    path: '/:pathMatch(.*)*',
+    name: '404',
+    meta: {
+      title: '404',
+      hideNav: true,
+    },
+    component: () => import('@/views/404Page.vue'),
+  },
+]
 const router = createRouter({
   history: createWebHistory(),
-  routes: routers,
+  routes: routes,
 })
 
 router.beforeEach((to, from, next) => {
@@ -18,6 +31,8 @@ router.beforeEach((to, from, next) => {
 })
 router.afterEach((to) => {
   // 设置标题
-  document.title = to.meta.title as string
+  if (to.meta.title) {
+    document.title = to.meta.title as string
+  }
 })
 export default router

@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
-export const loginRoute: RouteRecordRaw = {
+export const loginRoutes: RouteRecordRaw = {
   path: '/login',
   name: 'Login',
   meta: {

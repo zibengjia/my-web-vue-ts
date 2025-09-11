@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
-export const adminRoute: RouteRecordRaw = {
+export const adminRoutes: RouteRecordRaw = {
   path: '/admin',
   name: 'Admin',
   meta: {
