@@ -163,7 +163,7 @@ export default defineComponent({
     },
     offset: {
       type: Number,
-      default: 20,
+      default: 70,
     },
   },
 
@@ -390,11 +390,11 @@ export default defineComponent({
   pointer-events: none;
 
   /* 根据props设置位置 */
-  top: var(--position-offset, 20px);
+  top: var(--position-offset, 70px);
 
   &.position-bottom {
     top: auto;
-    bottom: var(--position-offset, 20px);
+    bottom: var(--position-offset, 70px);
   }
 }
 
@@ -431,7 +431,11 @@ export default defineComponent({
     width: 320px;
     height: 80px;
     border-radius: 20px;
-    background: rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(
+      to bottom right,
+      rgb(0, 0, 0, 0.4) 0%,
+      rgb(0, 0, 0, 0.1) 100%
+    );
 
     .island-collapsed {
       opacity: 0;
@@ -446,7 +450,9 @@ export default defineComponent({
 
   /* 悬停效果 */
   &:hover {
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+    box-shadow:
+      0 12px 40px 0 rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
     backdrop-filter: blur(28px) saturate(130%);
     -webkit-backdrop-filter: blur(28px) saturate(130%);

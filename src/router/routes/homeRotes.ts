@@ -7,5 +7,14 @@ export const homeRoutes: RouteRecordRaw = {
     title: '主页',
   },
   component: () => import('@/views/HomePage.vue'),
-  children: [],
+  children: [
+    {
+      path: 'about',
+      name: 'About',
+      meta: {
+        title: '关于',
+      },
+      component: () => import('@/views/AboutPage.vue'),
+    },
+  ],
 }
