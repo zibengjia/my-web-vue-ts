@@ -9,4 +9,6 @@
 import DynamicIslandNotification from '@/components/DynamicIslandNotification.vue'
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+@use '@/styles/index.scss';
+</style>

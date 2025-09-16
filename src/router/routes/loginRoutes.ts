@@ -5,5 +5,5 @@ export const loginRoutes: RouteRecordRaw = {
   meta: {
     title: '登录',
   },
-  component: () => import('@/views/Login-Register.vue'),
+  component: () => import('@/views/login/Login-Register.vue'),
 }

@@ -5,8 +5,7 @@
   </header>
 
   <main>
-    <h1>home</h1>
-    <button @click="handleClick">灵动岛</button>
+    <div class="background"></div>
     <RouterView />
   </main>
   <footer></footer>
@@ -15,9 +14,13 @@
 <script setup lang="ts">
 import TopNavBar from '@/components/TopNavBar.vue'
 import TopBanner from '@/components/TopBanner.vue'
-const handleClick = () => {
-  window.$dynamicIsland?.info('hello', 'test')
-}
 </script>
-
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.background {
+  width: 100%;
+  height: 100vh;
+  background: url('@/assets/images/image copy.png') no-repeat fixed;
+  background-size: cover;
+  filter: blur(5px);
+}
+</style>

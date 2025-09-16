@@ -5,6 +5,6 @@ export const adminRoutes: RouteRecordRaw = {
   meta: {
     title: '管理界面',
   },
-  component: () => import('@/views/AdminPage.vue'),
+  component: () => import('@/views/admin/AdminPage.vue'),
   children: [],
 }

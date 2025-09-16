@@ -2,10 +2,12 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { adminRoutes } from './routes/adminRoutes'
 import { homeRoutes } from './routes/homeRotes'
 import { loginRoutes } from './routes/loginRoutes'
+import { testRoutes } from '@/test/router/testRouter'
 const routes: RouteRecordRaw[] = [
   adminRoutes,
   homeRoutes,
   loginRoutes,
+  testRoutes,
   {
     path: '/:pathMatch(.*)*',
     name: '404',
