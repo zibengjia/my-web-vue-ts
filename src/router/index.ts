@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { adminRoutes } from './routes/adminRoutes'
-import { homeRoutes } from './routes/homeRotes'
+import { homeRoutes } from './routes/homeRoutes'
 import { loginRoutes } from './routes/loginRoutes'
-import { testRoutes } from '@/test/router/testRouter'
+
+import { testRoutes } from '@/test/testRoutes'
 const routes: RouteRecordRaw[] = [
   adminRoutes,
   homeRoutes,

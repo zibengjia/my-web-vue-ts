@@ -1,15 +1,5 @@
 <template>
-  <div class="shell">
-    <div class="photo">
-      <img src="@/assets/images/1.png" alt="" />
-    </div>
-    <div class="content">
-      <div class="text">
-        <h3>Business card</h3>
-        <h6>BILIBILI-山羊の前端小窝</h6>
-      </div>
-      <div class="btn" :class="{ active: isShow }" @click="isShow = !isShow"><span></span></div>
-    </div>
+  <div class="avatar-wrapper">
     <div class="box" :class="{ open: isShow }">
       <i class="icon icon-qq"
         ><svg t="1757938007137" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3699" width="200" height="200">
@@ -57,6 +47,9 @@
           ></path></svg
       ></i>
     </div>
+    <div class="photo" :class="{ open: isShow }" @click="isShow = !isShow">
+      <img src="@/assets/images/avatar.jpg" alt="" />
+    </div>
   </div>
 </template>
 
@@ -66,222 +59,109 @@ const isShow = ref<boolean>(false)
 </script>
 
 <style scoped lang="scss">
-.shell {
-  width: 330px;
-  height: 100px;
+$startAngle: 0.4turn; //开始角度
+$endAngle: 0.9turn; //结束角度
+$rotationRadius: 220px; //旋转半径
+.avatar-wrapper {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: show-shell 0.5s forwards ease-in-out;
+}
+
+.photo {
+  width: auto;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 5px solid #fafafa;
+  box-shadow: 0 0 0.5rem #babbbc;
+  animation: rotate-photo 2s forwards ease-in-out;
+}
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.box {
+  opacity: 0;
+  width: 60px;
+  height: 60px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border-radius: 5px;
-  background-color: rgb(250, 250, 250);
-  box-shadow: 0 0 2rem rgb(186, 186, 186);
-  animation: show-shell 0.5s forwards ease-in-out;
+  transition: opacity 0.3s ease;
+}
+
+.box i {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  background-color: #ececec60;
+  font-size: 26px;
+  text-align: center;
+  line-height: 60px;
+  box-shadow: 0 0 10px #fff;
+  color: rgb(106, 106, 245);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  opacity: 0;
+}
+
+.box i:hover {
+  transition-delay: initial !important;
+  box-shadow: 0 0 0 5px #babbbc;
+  background-color: #ecececbd;
+  color: #fff;
+}
+
+.box.open {
+  opacity: 1;
+}
+
+.box.open i {
+  left: 20px;
+  opacity: 1;
+}
+@for $i from 1 through 5 {
+  .box.open i:nth-of-type(#{$i}) {
+    transform: rotate(#{$startAngle + ($endAngle - $startAngle) * $i / 5}) translateX($rotationRadius) rotate(-#{$startAngle + ($endAngle - $startAngle) * $i / 5});
+    transition-delay: #{$i * 0.15s};
+    transition-duration: 0.5s;
+    transition-property: transform, left, opacity;
+  }
+  /* 为非open状态下的图标添加过渡效果 */
+  .box i:nth-of-type(#{$i}) {
+    transform: translate(0, 0);
+    transition-delay: #{(5 - $i) * 0.1s}; /* 反向延迟，使图标按顺序收回 */
+    transition-duration: 0.4s;
+    transition-property: transform, left, opacity;
+  }
+}
+
+svg {
+  width: 90%;
+  height: 90%;
 }
 @keyframes show-shell {
   0% {
-    width: 0;
-  }
-}
-.photo {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: rgb(250, 250, 250);
-  background-color: rgb(250, 250, 250);
-  margin-left: -50px;
-  box-shadow: 0 0 2rem rgb(186, 186, 186);
-  animation: rotate-photo 0.5s forwards ease-in-out;
-  img {
-    width: 100%;
-  }
-}
-.content {
-  padding: 10px;
-  overflow: hidden;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  &::before {
-    content: '';
-    position: absolute;
-    width: 230px;
-    height: 150px;
-    left: 0;
-    top: -20px;
-    z-index: -1;
-    transform: rotate(-8deg);
-    background-image: linear-gradient(to top, #96c34e, #f1c64e);
-  }
-  .text {
-    margin-top: 18px;
-    margin-left: 54px;
-    > * {
-      font-weight: normal;
-      margin: 3px 0px;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-  }
-  .btn {
-    background-color: #96c34e;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    position: absolute;
-    right: 20px;
-    top: 25px;
-    z-index: 1;
-    cursor: pointer;
-    animation: pop-btn 0.3s both ease-in-out 0.5s;
-    &:hover {
-      box-shadow: 0 0 0 5px #96c34e4d;
-    }
-  }
-}
-.content .btn span {
-  width: 60%;
-  height: 2px;
-  position: absolute;
-  background-color: white;
-  top: 50%;
-  left: 20%;
-  transform: translateY(-50%);
-  animation: to-hamburger 0.3s forwards ease-in-out;
-}
-//按钮动画
-.content .btn span::before,
-.content .btn span::after {
-  content: '';
-  width: 100%;
-  height: 2px;
-  position: absolute;
-  background-color: white;
-  transition-duration: 0.3s;
-  transform: rotate(0deg);
-  right: 0;
-}
-
-.content .btn span::before {
-  margin-top: -7px;
-}
-
-.content .btn span::after {
-  margin-top: 7px;
-}
-
-.content .btn.active span {
-  animation: to-arrow 0.3s forwards ease-in-out;
-}
-
-.content .btn.active span::before,
-.content .btn.active span::after {
-  width: 60%;
-  right: -1px;
-}
-
-.content .btn.active span::before {
-  transform: rotate(45deg);
-}
-
-.content .btn.active span::after {
-  transform: rotate(-45deg);
-}
-
-.box {
-  opacity: 0;
-  border-radius: 50%;
-  background-color: rgb(255, 255, 255, 0.7);
-  position: absolute;
-  top: 50%;
-  right: -30%;
-  transform: translate(-50%, -50%);
-  transition-duration: 0.3s;
-  box-shadow: 0 0 10px #fff;
-  border: 5px solid #fff;
-  &::after {
-    content: '';
-    display: block;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background-image: url('@/assets/images/2.png');
-    background-size: cover;
-    opacity: 0.7;
-  }
-  i {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #ececec;
-    font-size: 26px;
-    text-align: center;
-    line-height: 60px;
-    position: absolute;
-    left: 18px;
-    top: calc(60px - 50px / 2);
-    box-shadow: 0 0 10px #fff;
-    color: rgb(106, 106, 245);
-    background-color: #fff;
-    transition-duration: 0.3s;
-    &:hover {
-      transition-delay: initial !important;
-      box-shadow: 0 0 0 5px #babbbc;
-      background-color: #96c34eb6;
-      color: #fff;
-    }
-  }
-  &.open {
-    opacity: 1;
-    i {
-      left: 20px;
-      opacity: 1;
-      &:nth-of-type(1) {
-        transform: rotate(-90deg) translateX(120px) rotate(90deg);
-        transition-delay: 0s;
-      }
-      &:nth-of-type(2) {
-        transform: rotate(-45deg) translateX(120px) rotate(45deg);
-        transition-delay: 0.1s;
-      }
-      &:nth-of-type(3) {
-        transform: rotate(0deg) translateX(130px) rotate(0deg);
-        transition-delay: 0.2s;
-      }
-      &:nth-of-type(4) {
-        transform: rotate(45deg) translateX(120px) rotate(-45deg);
-        transition-delay: 0.3s;
-      }
-
-      &:nth-of-type(5) {
-        transform: rotate(90deg) translateX(110px) rotate(-90deg);
-        transition-delay: 0.4s;
-      }
-    }
-  }
-}
-svg {
-  width: 85%;
-  height: 85%;
-}
-@keyframes show-content {
-  0% {
-    width: 0;
-  }
-}
-@keyframes rotate-photo {
-  0% {
-    transform: rotate(0deg);
+    height: 0px;
+    width: 0px;
   }
 }
 @keyframes rotate-photo {
   100% {
-    transform: rotate(-360deg);
+    transform: rotate(-720deg);
   }
 }
+
 @keyframes pop-btn {
   0% {
     transform: scale(0);
@@ -295,17 +175,8 @@ svg {
     transform: scale(1);
   }
 }
-@keyframes pop-btn {
-  0% {
-    transform: scale(0);
-  }
-  80% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
+
+//warning:已废弃动画
 @keyframes to-hamburger {
   from {
     transform: translateY(-50%) rotate(-180deg);

@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
-import { homeRoutes } from '@/router/routes/homeRotes'
+import { homeRoutes } from '@/router/routes/homeRoutes'
 
 const routes = reactive([...(homeRoutes.children || [])])
 const navItems = routes.map((route) => ({
@@ -97,7 +97,7 @@ onUnmounted(() => {
   z-index: 1000;
   transition: all 0.6s ease;
 
-  //TODO: 3d动画会使svg滤镜失效
+  //BUG: 3d动画会使svg滤镜失效
   &.loading {
     .liquidGlass-wrapper {
       opacity: 0;
@@ -106,6 +106,7 @@ onUnmounted(() => {
   }
 }
 /* Liquid Glass 效果相关样式 */
+//NOTE:可以参考apple的官网效果
 .liquidGlass-wrapper {
   width: 100%;
   max-width: 80rem;

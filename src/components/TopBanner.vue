@@ -55,7 +55,11 @@ onUnmounted(() => {})
 <style scoped lang="scss">
 .banner {
   height: 200px;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
   overflow: hidden;
   width: 100vw;
   display: flex;
