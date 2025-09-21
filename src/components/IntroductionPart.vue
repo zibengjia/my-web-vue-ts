@@ -12,9 +12,9 @@ import IntroductionCard from '@/components/IntroductionCard.vue';
 
 <script setup lang="ts">
 import AvatarImage from './introduction/AvatarImage.vue'
-import GithubContribution from './introduction/GithubContributionImage.vue'
+import GithubContribution from './introduction/GithubContributionGrid.vue'
 import IntroductionText from './introduction/IntroductionText.vue'
-import ProgrammingSkills from './introduction/SkillTags.vue'
+import ProgrammingSkills from './introduction/SkillsTags.vue'
 </script>
 
 <style scoped>
@@ -26,26 +26,24 @@ import ProgrammingSkills from './introduction/SkillTags.vue'
   max-width: 1800px;
   width: 90vw;
   height: 1000px;
-  border: 5px solid #e5e5e5;
+
   display: grid;
 
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(6, 1fr);
   grid-column-gap: 10px;
   grid-row-gap: 20px;
-  div {
-    border: 5px solid #000000;
-  }
+  gap: 1rem;
 }
 
 .div1 {
-  grid-area: 1 / 1 / 3 / 3;
+  grid-area: 1 / 1 / 4 / 3;
 }
 .div2 {
   grid-area: 1 / 3 / 5 / 7;
 }
 .div3 {
-  grid-area: 3/ 1 / 7 / 3;
+  grid-area: 4/ 1 / 7 / 3;
 }
 .div4 {
   grid-area: 5 / 3 / 7 / 6;
