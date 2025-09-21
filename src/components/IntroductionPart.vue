@@ -20,12 +20,12 @@ import ProgrammingSkills from './introduction/SkillsTags.vue'
 <style scoped>
 .introduction-wrapper {
   position: absolute;
-  top: 300px;
+  top: 15vh;
   left: 50%;
   transform: translateX(-50%);
   max-width: 1800px;
   width: 90vw;
-  height: 1000px;
+  height: 80vh;
 
   display: grid;
 

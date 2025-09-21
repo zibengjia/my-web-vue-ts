@@ -56,7 +56,7 @@ $endAngle: 0.9turn; //结束角度
   overflow: hidden;
   border: 5px solid #fafafa;
   box-shadow: 0 0 0.5rem #babbbc;
-  animation: rotate-photo 2s forwards ease-in-out;
+  animation: rotate-photo 1s forwards ease-in-out;
 }
 .photo img {
   width: 100%;
@@ -132,13 +132,12 @@ svg {
 }
 @keyframes show-shell {
   0% {
-    height: 0px;
     width: 0px;
   }
 }
 @keyframes rotate-photo {
   100% {
-    transform: rotate(-720deg);
+    transform: rotate(360deg);
   }
 }
 

@@ -42,11 +42,6 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-  }
 }
 .container {
   display: grid;
