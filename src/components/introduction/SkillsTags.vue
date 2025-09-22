@@ -1,6 +1,20 @@
 <template>
   <div class="skillTags-wrapper">
     <div class="skills-wrapper">
+      <div class="technology-wrapper">
+        <SvgIcon class="tech" v-for="(skill, index) in technologyItems" :key="index" :name="skill.icon" width="50px" height="50px">
+          <p>{{ skill.name }}</p>
+        </SvgIcon>
+        <SvgIcon class="tech" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
+          <p>{{ skill.name }}</p>
+        </SvgIcon>
+        <SvgIcon class="tech" v-for="(skill, index) in technologyItems" :key="index" :name="skill.icon" width="50px" height="50px">
+          <p>{{ skill.name }}</p>
+        </SvgIcon>
+        <SvgIcon class="tech" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
+          <p>{{ skill.name }}</p>
+        </SvgIcon>
+      </div>
       <div class="skill-wrapper">
         <SvgIcon class="skill" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
           <p>{{ skill.name }}</p>
@@ -24,16 +38,31 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import SvgIcon from '../SvgIcon/SvgIcon.vue'
+const technologyItems = reactive([
+  { icon: 'html5', name: 'html5' },
+  { icon: 'sass', name: 'sass' },
+  { icon: 'typescript', name: 'typescript' },
+  { icon: 'vuejs', name: 'vuejs' },
+  { icon: 'vite', name: 'vite' },
+  { icon: 'git', name: 'git' },
+  { icon: 'visualstudiocode', name: 'vscode' },
+  { icon: 'vueuse', name: 'vueuse' },
+])
 
 const skillItems = reactive([
   { icon: 'html5', name: 'html5' },
   { icon: 'sass', name: 'sass' },
   { icon: 'css', name: 'css' },
-  { icon: 'javascript', name: 'java script' },
-  { icon: 'typescript', name: 'type script' },
+  { icon: 'javascript', name: 'javascript' },
+  { icon: 'typescript', name: 'typescript' },
   { icon: 'vuejs', name: 'vuejs' },
   { icon: 'vite', name: 'vite' },
   { icon: 'git', name: 'git' },
+  { icon: 'mysql', name: 'mysql' },
+  { icon: 'c', name: 'c' },
+  { icon: 'python', name: 'python' },
+  { icon: 'visualstudiocode', name: 'vscode' },
+  { icon: 'vueuse', name: 'vueuse' },
 ])
 const interestItems = reactive([
   { name: '篮球', id: '1' },
@@ -65,38 +94,50 @@ const interestItems = reactive([
 }
 .skills-wrapper {
   width: 100%;
-  height: 136px;
+  height: 300px;
   display: flex;
   position: relative;
-  flex-wrap: nowrap;
-  flex-direction: row;
+  flex-direction: column;
+  flex-wrap: wrap;
   border: 2px solid #fb9308;
   overflow: hidden;
 }
 
-.skill-wrapper {
+.technology-wrapper {
   width: auto;
-  height: auto;
+  height: 50%;
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
 
+  animation: tech-move 20s linear infinite;
+}
+
+.skill-wrapper {
+  width: auto;
+  height: 50%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row-reverse;
   animation: skill-move 20s linear infinite;
 }
-.skill {
+.skill,
+.tech {
   min-height: 120px;
   width: 50px;
-  padding: 1rem 1rem;
+  padding: 1rem 1.5rem;
+
   p {
-    font-size: 1.2rem;
+    font-size: 1rem;
     overflow: hidden; //隐藏文字
     text-overflow: ellipsis; //显示 ...
     white-space: nowrap; //不换行
 
     &:hover {
-      white-space: normal;
-      text-overflow: clip;
-      word-break: break-all;
+      overflow: visible;
+      // white-space: nowrap;
+      // text-overflow: clip;
+      // word-break: break-all;
     }
   }
 }
@@ -112,12 +153,21 @@ const interestItems = reactive([
   padding: 0.4rem;
 }
 
-@keyframes skill-move {
+@keyframes tech-move {
   0% {
     transform: translateX(0);
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes skill-move {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
   }
 }
 

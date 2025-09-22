@@ -11,10 +11,10 @@ import IntroductionCard from '@/components/IntroductionCard.vue';
 </template>
 
 <script setup lang="ts">
-import AvatarImage from './introduction/AvatarImage.vue'
-import GithubContribution from './introduction/GithubContributionGrid.vue'
-import IntroductionText from './introduction/IntroductionText.vue'
-import ProgrammingSkills from './introduction/SkillsTags.vue'
+import AvatarImage from './AvatarImage.vue'
+import GithubContribution from './GithubContributionGrid.vue'
+import IntroductionText from './IntroductionText.vue'
+import ProgrammingSkills from './SkillsTags.vue'
 </script>
 
 <style scoped>

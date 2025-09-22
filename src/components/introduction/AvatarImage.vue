@@ -1,6 +1,6 @@
 <template>
   <div class="avatar-wrapper">
-    <div class="box" :class="{ open: isShow }">
+    <div class="box" :class="{ open: isShow }" ref="box">
       <SvgIcon class="icon" v-for="(icon, index) in icons" :name="icon.icon" :key="index" />
     </div>
     <div class="photo" :class="{ open: isShow }" @click="isShow = !isShow">
@@ -10,10 +10,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import SvgIcon from '../SvgIcon/SvgIcon.vue'
+import { useResizeObserver } from '@vueuse/core'
 const isShow = ref<boolean>(false)
-const rotationRadius = ref<number>(220)
 const icons = reactive([
   { icon: 'github', name: 'github' },
   { icon: 'gitee', name: 'gitee' },
@@ -22,15 +22,26 @@ const icons = reactive([
   { icon: 'gmail', name: 'email' },
 ])
 const avatar = ref<HTMLElement | null>(null)
-onMounted(() => {
-  setTimeout(() => {
-    if (avatar.value) {
-      const avatarWidth = avatar.value.offsetWidth
-      console.log(avatarWidth)
-      // 确保最小值为100，避免图标过于靠近中心
-      rotationRadius.value = avatarWidth / 2 + 50
-    }
-  }, 1000)
+const box = ref<HTMLElement | null>(null)
+const avatarWidth = ref(0)
+const boxWidth = ref(0)
+useResizeObserver(avatar, (entries) => {
+  const entry = entries[0]
+  if (entry) {
+    avatarWidth.value = entry.contentRect.width
+  }
+})
+useResizeObserver(box, (entries) => {
+  const entry = entries[0]
+  if (entry) {
+    boxWidth.value = entry.contentRect.width
+  }
+})
+const rotationRadius = computed(() => {
+  if (avatarWidth.value && boxWidth.value) {
+    return `${avatarWidth.value / 2 + boxWidth.value}px`
+  }
+  return '220px' // 默认值
 })
 </script>
 
@@ -38,6 +49,7 @@ onMounted(() => {
 @use 'sass:math';
 $startAngle: 0.4turn; //开始角度
 $endAngle: 0.9turn; //结束角度
+$rotationRadius: v-bind(rotationRadius); //旋转半径
 .avatar-wrapper {
   height: 100%;
   width: 100%;
@@ -70,33 +82,32 @@ $endAngle: 0.9turn; //结束角度
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%) translateY(-50%);
   transition: opacity 0.3s ease;
 }
 
-.box .icon {
+.icon {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   position: absolute;
-  left: 0px;
-  top: 0px;
+  left: 0;
+  top: 0;
   cursor: pointer;
-  display: flex; /* 添加 flex 布局 */
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: #ececec60;
   font-size: 26px;
-  text-align: center;
-  line-height: 60px;
   box-shadow: 0 0 10px #fff;
   color: rgb(106, 106, 245);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   opacity: 0;
+  // 基础过渡属性
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.box .icon:hover {
-  transition-delay: initial !important;
+.icon:hover {
+  transition-delay: 0s !important;
   box-shadow: 0 0 0 5px #babbbc;
   background-color: #ecececbd;
   color: #fff;
@@ -111,18 +122,16 @@ $endAngle: 0.9turn; //结束角度
   opacity: 1;
 }
 @for $i from 1 through 5 {
-  .box.open .icon:nth-of-type(#{$i}) {
-    transform: rotate(#{$startAngle + math.div(($endAngle - $startAngle) * $i, 5)}) translateX(v-bind('rotationRadius + "px"')) rotate(-#{$startAngle + math.div(($endAngle - $startAngle) * $i, 5)});
+  .box.open .icon:nth-child(#{$i}) {
+    $angle: $startAngle + math.div(($endAngle - $startAngle) * $i, 5);
+    transform: rotate($angle) translateX($rotationRadius) rotate(-$angle);
     transition-delay: #{$i * 0.15s};
     transition-duration: 0.5s;
-    transition-property: transform, left, opacity;
   }
-  /* 为非open状态下的图标添加过渡效果 */
-  .box .icon:nth-of-type(#{$i}) {
+
+  .box:not(.open) .icon:nth-child(#{$i}) {
     transform: translate(0, 0);
-    transition-delay: #{(5 - $i) * 0.1s}; /* 反向延迟，使图标按顺序收回 */
-    transition-duration: 0.4s;
-    transition-property: transform, left, opacity;
+    transition-delay: #{(5 - $i) * 0.2s};
   }
 }
 
