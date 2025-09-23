@@ -76,14 +76,14 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   object-fit: cover;
 }
 .box {
-  opacity: 0;
+  opacity: 1;
   width: 60px;
   height: 60px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
-  transition: opacity 0.3s ease;
+  transition: opacity 1s ease;
 }
 
 .icon {
@@ -103,7 +103,7 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   color: rgb(106, 106, 245);
   opacity: 0;
   // 基础过渡属性
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 1s cubic-bezier(0.72, 0.02, 0.78, 0.8);
 }
 
 .icon:hover {
@@ -126,12 +126,12 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
     $angle: $startAngle + math.div(($endAngle - $startAngle) * $i, 5);
     transform: rotate($angle) translateX($rotationRadius) rotate(-$angle);
     transition-delay: #{$i * 0.15s};
-    transition-duration: 0.5s;
+    transition-duration: 1s;
+    transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-
-  .box:not(.open) .icon:nth-child(#{$i}) {
-    transform: translate(0, 0);
-    transition-delay: #{(5 - $i) * 0.2s};
+  .box .icon:nth-child(#{$i}) {
+    transition-delay: #{(5-$i) * 0.15s};
+    transition-duration: 0.5s;
   }
 }
 

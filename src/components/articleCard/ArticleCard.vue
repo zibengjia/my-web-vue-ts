@@ -18,8 +18,8 @@
         </div>
         <div class="title">给你的博客内容添加密码保护</div>
         <div class="information">
-          <p class="date">2025-9-22</p>
-          <p class="word-count">1400字</p>
+          <p class="date"><SvgIcon name="calendar" /> 2025-9-22</p>
+          <p class="word-count"><SvgIcon name="wordCount" /> 1400字</p>
         </div>
       </div>
       <div class="content">
@@ -33,6 +33,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import SvgIcon from '../SvgIcon/SvgIcon.vue'
 
 const tagItems = ['前端', 'Vue', 'JavaScript']
 const isExpanded = ref(false)
@@ -40,14 +41,21 @@ const isExpanded = ref(false)
 
 <style scoped lang="scss">
 .card {
+  transition: all 2s ease-in-out;
   position: relative;
   width: 24rem;
+  height: 30rem;
   background-color: #fff;
   border-radius: 6px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.12);
   .image {
     height: 12.5rem;
+    width: 100%;
     img {
       display: block;
       width: 100%;
@@ -75,9 +83,21 @@ const isExpanded = ref(false)
   }
   .information {
     p {
-      display: inline-block;
+      display: inline-flex;
       margin-right: 0.5rem;
       font-size: 0.8rem;
+      align-items: center;
+      .svg-icon {
+        display: inline-block;
+
+        margin-right: 0.1rem;
+        height: 1.2rem;
+        width: 1rem;
+        svg {
+          height: 100%;
+          width: 100%;
+        }
+      }
     }
   }
   .content {
@@ -92,11 +112,8 @@ const isExpanded = ref(false)
 //展开后的样式
 .card.expanded {
   width: 100vw;
-  min-height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 999;
+  height: 100vh;
+  overflow-y: scroll;
 
   .image {
     height: 30rem;

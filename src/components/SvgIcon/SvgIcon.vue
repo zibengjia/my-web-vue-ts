@@ -19,11 +19,11 @@ defineProps({
   },
   width: {
     type: String,
-    default: '50px',
+    default: '100%',
   },
   height: {
     type: String,
-    default: '50px',
+    default: '100%',
   },
 })
 </script>
