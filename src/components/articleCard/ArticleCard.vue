@@ -17,7 +17,7 @@
       <div class="content-overview">
         <p>{{ article.contentPre }}</p>
       </div>
-      <MdPreview class="md-preview content" :id="state.id" v-model="article.contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
+      <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
       <MdCatalog class="md-catalog" :editorId="state.id" :scrollElement="scrollElement" :theme="state.theme" />
     </div>
   </div>
@@ -37,7 +37,7 @@
 import { computed, reactive, ref } from 'vue'
 import SvgIcon from '../SvgIcon/SvgIcon.vue'
 import { MdCatalog, MdPreview, type Themes } from 'md-editor-v3'
-
+import { getArticleDetail } from '@/apis/article/articleApi'
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css'
 
@@ -61,22 +61,33 @@ const emit = defineEmits<{
 }>()
 const article = reactive({
   ...props.articlePre,
-  contentMd: `# Hello World`,
 })
 // md-editor-v3配置
 const scrollElement = document.documentElement
 const state = reactive({
-  theme: 'light' as Themes,
+  theme: 'dark' as Themes,
   previewTheme: 'vuepress',
   id: 'preview-only',
 })
 const isExpanded = ref(false)
 const isCollapsed = computed(() => props.expandedArticleId !== 0 && article.articleId !== props.expandedArticleId)
+const contentMd = ref('')
+//获取文章详情
+const fetchArticleDetail = async (articleId: number) => {
+  try {
+    contentMd.value = (await getArticleDetail(articleId)).data.data.contentMd
+    console.log('文章md内容', contentMd.value)
+  } catch (error) {
+    console.error('获取文章详情失败:', error)
+  }
+}
+
 //展开操作
 const handleClick = () => {
   if (isExpanded.value) return
   isExpanded.value = true
   emit('cardClick', article.articleId)
+  fetchArticleDetail(article.articleId)
 }
 
 // 处理关闭操作

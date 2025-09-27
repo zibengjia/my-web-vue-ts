@@ -7,8 +7,8 @@
 <script setup lang="ts">
 import { ref, onMounted, defineAsyncComponent } from 'vue'
 const ArticleCard = defineAsyncComponent(() => import('@/components/articleCard/ArticleCard.vue'))
-import { type ArticlePageItem } from '@/utils/api/article/articleTypes'
-import { getArticles } from '@/utils/api/article/articleApi'
+import { type ArticlePageItem } from '@/apis/article/articleTypes'
+import { getArticles } from '@/apis/article/articleApi'
 
 const articles = ref<ArticlePageItem[]>([])
 const expandedArticleId = ref<number>(0)
