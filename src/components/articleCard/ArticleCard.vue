@@ -1,23 +1,23 @@
 <template>
-  <div class="card" :class="{ expanded: isExpanded }" @click="isExpanded = true">
+  <div class="card" :class="{ expanded: isExpanded, collapsed: isCollapsed }" @click="handleClick">
     <div class="article">
       <div class="image">
         <img src="@/assets/images/articleTest.png" alt="" />
       </div>
       <div class="header">
         <div class="tags">
-          <span v-for="(tag, index) in tagItems" :key="index">#{{ tag }}</span>
+          <span v-for="(tag, index) in article.tags" :key="index">#{{ tag }}</span>
         </div>
         <div class="title">{{ article.title }}</div>
         <div class="information">
-          <p class="date"><SvgIcon name="calendar" /> {{ article.date }}</p>
+          <p class="date"><SvgIcon name="calendar" /> {{ article.createTime }}</p>
           <p class="word-count"><SvgIcon name="wordCount" /> {{ article.wordCount }}</p>
         </div>
       </div>
       <div class="content-overview">
-        <p>{{ article.contentOverview }}</p>
+        <p>{{ article.contentPre }}</p>
       </div>
-      <MdPreview class="md-preview content" :id="state.id" v-model="article.content" :theme="state.theme" :previewTheme="state.previewTheme" />
+      <MdPreview class="md-preview content" :id="state.id" v-model="article.contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
       <MdCatalog class="md-catalog" :editorId="state.id" :scrollElement="scrollElement" :theme="state.theme" />
     </div>
   </div>
@@ -34,52 +34,57 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, nextTick } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import SvgIcon from '../SvgIcon/SvgIcon.vue'
 import { MdCatalog, MdPreview, type Themes } from 'md-editor-v3'
 
 // preview.css相比style.css少了编辑器那部分样式
 import 'md-editor-v3/lib/preview.css'
 
-const isExpanded = ref(false)
-const tagItems = ['前端', 'Vue', 'JavaScript']
+// 定义组件的属性
+
+interface ArticlePre {
+  articleId: number
+  title: string
+  tags: string[]
+  wordCount: number
+  createTime: string
+  contentPre: string
+}
+
+const props = defineProps<{
+  articlePre: ArticlePre
+  expandedArticleId: number
+}>()
+const emit = defineEmits<{
+  cardClick: [articleId: number]
+}>()
+const article = reactive({
+  ...props.articlePre,
+  contentMd: `# Hello World`,
+})
+// md-editor-v3配置
+const scrollElement = document.documentElement
 const state = reactive({
   theme: 'light' as Themes,
   previewTheme: 'vuepress',
   id: 'preview-only',
 })
-const scrollElement = document.documentElement
-const article = reactive({
-  title: '给你的博客内容添加密码保护',
-  tags: ['前端', 'Vue', 'JavaScript'],
-  date: '2025-9-22',
-  wordCount: 1400,
-  contentOverview: '在编写博客文章时，我们可能会遇到一些敏感内容，比如个人隐私、商业机密等，这些内容我们希望只有特定读者才能访问。',
-  content: `
-### 请求参数
-
-| 参数名   | 类型    | 必填 | 描述                          |
-| -------- | ------- | ---- | ----------------------------- |
-| page     | integer | 否   | 页码，默认为 1                |
-| size     | integer | 否   | 每页数量，默认为 10，最大 100 |
-| tag      | string  | 否   | 按标签筛选                    |
-| category | string  | 否   | 按分类筛选                    |
-
-### 请求示例',
-})
-//md-editor-v3配置
-const scrollElement = document.documentElement
-const state = reactive({
-  theme: 'light' as Themes,
-  previewTheme: 'vuepress',
-  id: 'preview-only',`,
-})
+const isExpanded = ref(false)
+const isCollapsed = computed(() => props.expandedArticleId !== 0 && article.articleId !== props.expandedArticleId)
+//展开操作
+const handleClick = () => {
+  if (isExpanded.value) return
+  isExpanded.value = true
+  emit('cardClick', article.articleId)
+}
 
 // 处理关闭操作
-const handleClose = async () => {
+const handleClose = () => {
   isExpanded.value = false
-  // 等待下一个DOM更新周期后重置滚动
-  await nextTick()
+  // 向父组件传递0，表示关闭当前文章
+  emit('cardClick', 0)
+  // 重置滚动位置
   document.documentElement.scrollTop = 0
   document.body.scrollTop = 0
   // 强制重置卡片的滚动位置
@@ -208,11 +213,18 @@ $article-content-font-size: 1rem;
     }
   }
 }
+.card.collapsed {
+  width: 0;
+  height: 0;
+}
+.card.otherExpanded {
+  width: 0;
+  height: 0;
+}
 
 .card.expanded {
-  width: 100vw;
-  height: 100vh;
-
+  width: 100%;
+  height: 100%;
   overflow-y: scroll;
   transition:
     width 0.3s ease,

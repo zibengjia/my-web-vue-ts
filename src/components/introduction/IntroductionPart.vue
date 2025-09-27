@@ -1,4 +1,3 @@
-import IntroductionCard from '@/components/IntroductionCard.vue';
 <template>
   <div class="introduction-wrapper">
     <AvatarImage class="div1" />
@@ -11,10 +10,12 @@ import IntroductionCard from '@/components/IntroductionCard.vue';
 </template>
 
 <script setup lang="ts">
-import AvatarImage from './AvatarImage.vue'
-import GithubContribution from './GithubContributionGrid.vue'
-import IntroductionText from './IntroductionText.vue'
-import ProgrammingSkills from './SkillsTags.vue'
+import { defineAsyncComponent } from 'vue'
+
+const AvatarImage = defineAsyncComponent(() => import('./AvatarImage.vue'))
+const GithubContribution = defineAsyncComponent(() => import('./GithubContributionGrid.vue'))
+const IntroductionText = defineAsyncComponent(() => import('./IntroductionText.vue'))
+const ProgrammingSkills = defineAsyncComponent(() => import('./SkillsTags.vue'))
 </script>
 
 <style scoped>

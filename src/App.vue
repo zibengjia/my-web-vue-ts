@@ -6,7 +6,9 @@
 </template>
 
 <script lang="ts" setup>
-import DynamicIslandNotification from '@/components/DynamicIslandNotification.vue'
+import { defineAsyncComponent } from 'vue'
+
+const DynamicIslandNotification = defineAsyncComponent(() => import('@/components/DynamicIslandNotification.vue'))
 </script>
 
 <style lang="scss" scoped>

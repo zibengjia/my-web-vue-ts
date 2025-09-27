@@ -10,7 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import TopNavBar from '@/components/TopNavBar.vue'
+import { defineAsyncComponent } from 'vue'
+
+const TopNavBar = defineAsyncComponent(() => import('@/components/TopNavBar.vue'))
 </script>
 <style scoped lang="scss">
 .background {
