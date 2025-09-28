@@ -17,8 +17,10 @@
       <div class="content-overview">
         <p>{{ article.contentPre }}</p>
       </div>
-      <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
-      <MdCatalog class="md-catalog" :editorId="state.id" :scrollElement="scrollElement" :theme="state.theme" />
+      <div class="md">
+        <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
+        <MdCatalog class="md-catalog catalog" :editorId="state.id" :scrollElement="scrollElement" :theme="state.theme" />
+      </div>
     </div>
   </div>
   <transition name="slide-fade">
@@ -64,6 +66,8 @@ const article = reactive({
 })
 // md-editor-v3配置
 const scrollElement = document.documentElement
+//TODO:修复bug
+//bug:目录无法正常随内容滚动而变化,点击目录无法跳转至对应内容,应该和scrollElement有关,具体看api说明
 const state = reactive({
   theme: 'dark' as Themes,
   previewTheme: 'vuepress',
@@ -206,29 +210,32 @@ $article-content-font-size: 1rem;
         color: #999;
       }
     }
-    .content {
+    .md {
       opacity: 0;
-      margin-top: 1rem;
-      margin-left: 20vw;
       transform: translateY(20rem);
       transition:
         opacity 0.3s ease,
         transform 0.3s ease;
+      .content {
+        margin-top: 1rem;
+        margin-left: 20vw;
 
-      p {
-        font-size: $article-content-font-size;
-        line-height: 1.2rem;
-        color: #999;
-        word-break: break-all;
+        p {
+          font-size: $article-content-font-size;
+          line-height: 1.2rem;
+          color: #999;
+          word-break: break-all;
+        }
+      }
+      .catalog {
+        p {
+          font-size: $article-content-font-size;
+        }
       }
     }
   }
 }
 .card.collapsed {
-  width: 0;
-  height: 0;
-}
-.card.otherExpanded {
   width: 0;
   height: 0;
 }
@@ -294,26 +301,57 @@ $article-content-font-size: 1rem;
       opacity: 0;
       transition: opacity 0.2s ease;
     }
-    .content {
+    .md {
       opacity: 1;
-      // text-align: center;
-      max-width: 80rem;
       transform: translateY(0);
       transition:
         opacity 0.3s ease,
         transform 0.6s ease;
 
-      margin: 0 auto;
-      padding: 0 2rem;
+      .content {
+        // text-align: center;
+        max-width: 80rem;
 
-      p {
-        display: inline-block;
-        text-align: left;
+        margin: 0 auto;
+        padding: 0 2rem;
+
+        p {
+          display: inline-block;
+          text-align: left;
+        }
+      }
+      .catalog {
+        p {
+          font-size: $article-content-font-size;
+        }
       }
     }
   }
 }
 
+@media screen and (max-width: 768px) {
+  .card {
+    .article {
+      .header {
+        .title {
+          font-size: $article-title-font-size;
+          line-height: 1.5rem;
+        }
+        .information {
+          p {
+            font-size: $article-info-font-size;
+            margin-right: 0.5rem;
+          }
+        }
+      }
+      .content-overview {
+        p {
+          font-size: $article-content-overview-font-size;
+        }
+      }
+    }
+  }
+}
 .close-button {
   position: absolute;
   top: 3rem;
