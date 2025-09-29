@@ -37,8 +37,6 @@ onMounted(() => {
   align-items: center;
   justify-content: space-evenly;
   height: 100vh;
-
-  overflow-y: auto;
 }
 .collapsed {
   width: 0 !important;

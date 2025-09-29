@@ -1,5 +1,5 @@
 <template>
-  <div class="card" :class="{ expanded: isExpanded, collapsed: isCollapsed }" @click="handleClick">
+  <div class="card" ref="card" :class="{ expanded: isExpanded, collapsed: isCollapsed }" @click="handleClick">
     <div class="article">
       <div class="image">
         <img src="@/assets/images/articleTest.png" alt="" />
@@ -18,13 +18,9 @@
         <p>{{ article.contentPre }}</p>
       </div>
       <div class="md">
-        <div class="content-container">
-          <div class="content-container-wrapper">
-            <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
-          </div>
-        </div>
-        <MdCatalog class="md-catalog catalog" :editorId="state.id" :scrollElement="scrollElement" :theme="state.theme" />
+        <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
       </div>
+      <MdCatalog class="md-catalog catalog" :editorId="state.id" :scrollElement="scroll" :theme="state.theme" />
     </div>
   </div>
   <transition name="slide-fade">
@@ -69,9 +65,11 @@ const article = reactive({
   ...props.articlePre,
 })
 // md-editor-v3配置
-const scrollElement = '.content-container-wrapper'
+const scroll = '.card.expanded'
+
 //TODO:修复bug
 //bug:目录无法正常随内容滚动而变化,点击目录无法跳转至对应内容,应该和scrollElement有关,具体看api说明
+//note:初步修复目录滚动跳转功能
 const state = reactive({
   theme: 'light' as Themes,
   previewTheme: 'vuepress',
@@ -125,6 +123,13 @@ $article-info-font-size-expanded: 1rem;
 $article-content-overview-font-size: 0.8rem;
 $article-content-font-size: 1rem;
 
+.catalog {
+  position: fixed;
+  right: 100px;
+  top: 100px;
+  z-index: 1000;
+}
+
 .card {
   position: relative;
   width: 24rem;
@@ -143,6 +148,7 @@ $article-content-font-size: 1rem;
     width: 100%;
     height: 100%;
     padding: 0rem 1.2rem;
+
     .image {
       height: 12.5em;
       width: 100%;
@@ -227,8 +233,6 @@ $article-content-font-size: 1rem;
           position: relative;
           height: 100%;
           overflow: auto;
-          // 添加定位使元素可以作为滚动容器使用
-          position: relative;
         }
       }
       .catalog {
@@ -247,13 +251,13 @@ $article-content-font-size: 1rem;
 .card.expanded {
   width: 100%;
   height: 100%;
-  overflow-y: scroll;
+  overflow: auto;
   // scrollbar-width: none;
   // -ms-overflow-style: none;
   // &::-webkit-scrollbar {
   //   display: none;
   // }
-
+  position: relative;
   .article {
     padding: 0;
 
@@ -313,8 +317,6 @@ $article-content-font-size: 1rem;
           position: relative;
           height: 100%;
           overflow: auto;
-          // 添加定位使元素可以作为滚动容器使用
-          position: relative;
         }
       }
     }
