@@ -18,7 +18,11 @@
         <p>{{ article.contentPre }}</p>
       </div>
       <div class="md">
-        <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
+        <div class="content-container">
+          <div class="content-container-wrapper">
+            <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
+          </div>
+        </div>
         <MdCatalog class="md-catalog catalog" :editorId="state.id" :scrollElement="scrollElement" :theme="state.theme" />
       </div>
     </div>
@@ -65,11 +69,11 @@ const article = reactive({
   ...props.articlePre,
 })
 // md-editor-v3配置
-const scrollElement = document.documentElement
+const scrollElement = '.content-container-wrapper'
 //TODO:修复bug
 //bug:目录无法正常随内容滚动而变化,点击目录无法跳转至对应内容,应该和scrollElement有关,具体看api说明
 const state = reactive({
-  theme: 'dark' as Themes,
+  theme: 'light' as Themes,
   previewTheme: 'vuepress',
   id: 'preview-only',
 })
@@ -80,7 +84,7 @@ const contentMd = ref('')
 const fetchArticleDetail = async (articleId: number) => {
   try {
     contentMd.value = (await getArticleDetail(articleId)).data.data.contentMd
-    console.log('文章md内容', contentMd.value)
+    console.log('文章内容获取成功')
   } catch (error) {
     console.error('获取文章详情失败:', error)
   }
@@ -133,11 +137,9 @@ $article-content-font-size: 1rem;
   justify-content: flex-start;
   flex-direction: column;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.12);
-  transition:
-    width 0.3s ease,
-    height 0.3s ease;
 
   .article {
+    position: relative;
     width: 100%;
     height: 100%;
     padding: 0rem 1.2rem;
@@ -153,6 +155,7 @@ $article-content-font-size: 1rem;
       }
     }
     .header {
+      position: relative;
       text-align: center;
       transform: translateY(0) translateX(0);
       transition: transform 0.3s ease;
@@ -211,20 +214,21 @@ $article-content-font-size: 1rem;
       }
     }
     .md {
+      position: relative;
       opacity: 0;
       transform: translateY(20rem);
-      transition:
-        opacity 0.3s ease,
-        transform 0.3s ease;
-      .content {
-        margin-top: 1rem;
-        margin-left: 20vw;
 
-        p {
-          font-size: $article-content-font-size;
-          line-height: 1.2rem;
-          color: #999;
-          word-break: break-all;
+      display: flex;
+      .content-container {
+        height: 60vh;
+        position: relative;
+        overflow: hidden;
+        .content-container-wrapper {
+          position: relative;
+          height: 100%;
+          overflow: auto;
+          // 添加定位使元素可以作为滚动容器使用
+          position: relative;
         }
       }
       .catalog {
@@ -244,15 +248,11 @@ $article-content-font-size: 1rem;
   width: 100%;
   height: 100%;
   overflow-y: scroll;
-  transition:
-    width 0.3s ease,
-    height 0.3s ease;
-
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  // scrollbar-width: none;
+  // -ms-overflow-style: none;
+  // &::-webkit-scrollbar {
+  //   display: none;
+  // }
 
   .article {
     padding: 0;
@@ -304,54 +304,23 @@ $article-content-font-size: 1rem;
     .md {
       opacity: 1;
       transform: translateY(0);
-      transition:
-        opacity 0.3s ease,
-        transform 0.6s ease;
 
-      .content {
-        // text-align: center;
-        max-width: 80rem;
-
-        margin: 0 auto;
-        padding: 0 2rem;
-
-        p {
-          display: inline-block;
-          text-align: left;
-        }
-      }
-      .catalog {
-        p {
-          font-size: $article-content-font-size;
+      .content-container {
+        height: 60vh;
+        position: relative;
+        overflow: hidden;
+        .content-container-wrapper {
+          position: relative;
+          height: 100%;
+          overflow: auto;
+          // 添加定位使元素可以作为滚动容器使用
+          position: relative;
         }
       }
     }
   }
 }
 
-@media screen and (max-width: 768px) {
-  .card {
-    .article {
-      .header {
-        .title {
-          font-size: $article-title-font-size;
-          line-height: 1.5rem;
-        }
-        .information {
-          p {
-            font-size: $article-info-font-size;
-            margin-right: 0.5rem;
-          }
-        }
-      }
-      .content-overview {
-        p {
-          font-size: $article-content-overview-font-size;
-        }
-      }
-    }
-  }
-}
 .close-button {
   position: absolute;
   top: 3rem;
