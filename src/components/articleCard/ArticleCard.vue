@@ -19,8 +19,8 @@
       </div>
       <div class="md">
         <MdPreview class="md-preview content" :id="state.id" :modelValue="contentMd" :theme="state.theme" :previewTheme="state.previewTheme" />
+        <MdCatalog class="md-catalog catalog" :editorId="state.id" :scrollElement="scroll" :theme="state.theme" />
       </div>
-      <MdCatalog class="md-catalog catalog" :editorId="state.id" :scrollElement="scroll" :theme="state.theme" />
     </div>
   </div>
   <transition name="slide-fade">
@@ -124,10 +124,15 @@ $article-content-overview-font-size: 0.8rem;
 $article-content-font-size: 1rem;
 
 .catalog {
-  position: fixed;
-  right: 100px;
-  top: 100px;
-  z-index: 1000;
+  position: sticky;
+  right: 6rem;
+  top: 8rem;
+  width: 18rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 40px);
+}
+.md-preview {
+  margin-right: 8rem;
 }
 
 .card {
@@ -223,18 +228,8 @@ $article-content-font-size: 1rem;
       position: relative;
       opacity: 0;
       transform: translateY(20rem);
-
+      margin-left: 10rem;
       display: flex;
-      .content-container {
-        height: 60vh;
-        position: relative;
-        overflow: hidden;
-        .content-container-wrapper {
-          position: relative;
-          height: 100%;
-          overflow: auto;
-        }
-      }
       .catalog {
         p {
           font-size: $article-content-font-size;
