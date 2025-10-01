@@ -128,6 +128,11 @@ $article-content-font-size: 1rem;
   right: 100px;
   top: 100px;
   z-index: 1000;
+  display: none;
+}
+
+.card.expanded .catalog {
+  display: block;
 }
 
 .card {
@@ -246,6 +251,15 @@ $article-content-font-size: 1rem;
 .card.collapsed {
   width: 0;
   height: 0;
+  overflow: hidden;
+  transition:
+    width 0.3s ease,
+    height 0.3s ease;
+}
+
+.card.collapsed * {
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .card.expanded {

@@ -1,20 +1,6 @@
 <template>
   <div class="skillTags-wrapper">
     <div class="skills-wrapper">
-      <div class="technology-wrapper">
-        <SvgIcon class="tech" v-for="(skill, index) in technologyItems" :key="index" :name="skill.icon" width="50px" height="50px">
-          <p>{{ skill.name }}</p>
-        </SvgIcon>
-        <SvgIcon class="tech" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
-          <p>{{ skill.name }}</p>
-        </SvgIcon>
-        <SvgIcon class="tech" v-for="(skill, index) in technologyItems" :key="index" :name="skill.icon" width="50px" height="50px">
-          <p>{{ skill.name }}</p>
-        </SvgIcon>
-        <SvgIcon class="tech" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
-          <p>{{ skill.name }}</p>
-        </SvgIcon>
-      </div>
       <div class="skill-wrapper">
         <SvgIcon class="skill" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
           <p>{{ skill.name }}</p>
@@ -38,16 +24,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import SvgIcon from '../SvgIcon/SvgIcon.vue'
-const technologyItems = reactive([
-  { icon: 'html5', name: 'html5' },
-  { icon: 'sass', name: 'sass' },
-  { icon: 'typescript', name: 'typescript' },
-  { icon: 'vuejs', name: 'vuejs' },
-  { icon: 'vite', name: 'vite' },
-  { icon: 'git', name: 'git' },
-  { icon: 'visualstudiocode', name: 'vscode' },
-  { icon: 'vueuse', name: 'vueuse' },
-])
 
 const skillItems = reactive([
   { icon: 'html5', name: 'html5' },
@@ -94,23 +70,14 @@ const interestItems = reactive([
 }
 .skills-wrapper {
   width: 100%;
-  height: 300px;
+  height: auto;
+  min-height: 120px;
   display: flex;
   position: relative;
   flex-direction: column;
   flex-wrap: wrap;
   border: 2px solid #fb9308;
   overflow: hidden;
-}
-
-.technology-wrapper {
-  width: auto;
-  height: 50%;
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-
-  animation: tech-move 20s linear infinite;
 }
 
 .skill-wrapper {
@@ -121,8 +88,7 @@ const interestItems = reactive([
   flex-direction: row-reverse;
   animation: skill-move 20s linear infinite;
 }
-.skill,
-.tech {
+.skill {
   min-height: 120px;
   width: 50px;
   padding: 1rem 1.5rem;
@@ -151,6 +117,7 @@ const interestItems = reactive([
   justify-content: flex-start;
   overflow: auto;
   padding: 0.4rem;
+  margin-top: 1rem;
 }
 
 @keyframes tech-move {

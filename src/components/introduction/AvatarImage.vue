@@ -58,22 +58,40 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   justify-content: center;
   align-items: center;
   animation: show-shell 0.5s forwards ease-in-out;
+  perspective: 1000px;
 }
 
 .photo {
-  width: auto;
-  height: 60%;
-  box-sizing: border-box;
+  width: min(360px, 30vw);
+  height: min(360px, 30vw);
+  aspect-ratio: 1/1;
   border-radius: 50%;
   overflow: hidden;
-  border: 5px solid #fafafa;
-  box-shadow: 0 0 0.5rem #babbbc;
+  border: 4px solid rgba(245, 253, 220, 0.85);
+  box-shadow:
+    0 2px 10px rgba(72, 187, 120, 0.5),
+    0 5px 15px rgba(245, 158, 11, 0.45),
+    0 10px 25px rgba(16, 185, 129, 0.4),
+    0 0 0 2px rgba(255, 255, 255, 0.6) inset;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   animation: rotate-photo 1s forwards ease-in-out;
+
+  &:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow:
+      0 5px 15px rgba(72, 187, 120, 0.7),
+      0 10px 25px rgba(245, 158, 11, 0.65),
+      0 15px 36px rgba(16, 185, 129, 0.6),
+      0 0 0 2px rgba(255, 255, 255, 0.9) inset;
+  }
 }
 .photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 .box {
   opacity: 1;
@@ -93,6 +111,7 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   position: absolute;
   left: 0;
   top: 0;
+  padding: 5px;
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -108,7 +127,6 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
 
 .icon:hover {
   transition-delay: 0s !important;
-  box-shadow: 0 0 0 5px #babbbc;
   background-color: #ecececbd;
   color: #fff;
 }
@@ -147,6 +165,18 @@ svg {
 @keyframes rotate-photo {
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 

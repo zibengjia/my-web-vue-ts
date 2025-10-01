@@ -5,7 +5,7 @@
     </div>
     <div class="identity">
       <p>
-        &nbsp;A&nbsp;
+        <span class="letter-a">A</span>&nbsp;
         <i class="identity-text">{{ text }}</i>
       </p>
     </div>
@@ -129,6 +129,10 @@ onUnmounted(() => {
       position: relative;
     }
   }
+}
+
+.letter-a {
+  display: inline-block;
 }
 .emotional-state {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
