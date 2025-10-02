@@ -35,7 +35,7 @@ const skillItems = reactive([
   { icon: 'vite', name: 'vite' },
   { icon: 'git', name: 'git' },
   { icon: 'mysql', name: 'mysql' },
-  { icon: 'c', name: 'c' },
+  { icon: 'c', name: 'C' },
   { icon: 'python', name: 'python' },
   { icon: 'visualstudiocode', name: 'vscode' },
   { icon: 'vueuse', name: 'vueuse' },
@@ -98,12 +98,13 @@ const interestItems = reactive([
     overflow: hidden; //隐藏文字
     text-overflow: ellipsis; //显示 ...
     white-space: nowrap; //不换行
+    text-align: center;
 
     &:hover {
       overflow: visible;
-      // white-space: nowrap;
-      // text-overflow: clip;
-      // word-break: break-all;
+      white-space: nowrap;
+      text-overflow: clip;
+      word-break: break-all;
     }
   }
 }
@@ -131,10 +132,10 @@ const interestItems = reactive([
 
 @keyframes skill-move {
   0% {
-    transform: translateX(-50%);
+    transform: translateX(0%);
   }
   100% {
-    transform: translateX(0%);
+    transform: translateX(-50%);
   }
 }
 

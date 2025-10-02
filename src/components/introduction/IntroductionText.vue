@@ -1,7 +1,7 @@
 <template>
   <div class="text-wrapper">
     <div class="hi">
-      <p><span class="hello">Hello</span> I'm <i class="name">ZYG</i></p>
+      <p><span class="hello">Hello</span> <span>I'm </span> <i class="name">ZYG</i></p>
     </div>
     <div class="identity">
       <p>
@@ -90,7 +90,7 @@ onUnmounted(() => {
   padding-left: 0.5rem;
   position: relative;
   color: transparent;
-  -webkit-text-stroke: 1px #01fe88;
+  -webkit-text-stroke: 1px rgb(1, 254, 136);
   &::before {
     content: 'Hello';
     position: absolute;
@@ -101,12 +101,12 @@ onUnmounted(() => {
     overflow: hidden;
     box-sizing: border-box;
     white-space: nowrap;
-    color: #01fe87;
-    border: 2px solid #01fe87;
+    color: rgb(1, 254, 135);
+    border: 2px solid rgb(1, 254, 135);
     border-radius: 1rem;
     text-shadow:
-      0 0 5px #01fe87,
-      0 0 25px #01fe87;
+      0 0 5px rgb(1, 254, 135),
+      0 0 25px rgb(1, 254, 135);
     animation: light 3s infinite;
   }
 }
@@ -114,7 +114,36 @@ onUnmounted(() => {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 4.5rem;
   font-weight: 600;
-  color: #01fe87;
+  color: rgb(1, 254, 135);
+  position: relative;
+  display: inline-block;
+  padding-bottom: 5px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, rgb(1, 254, 135), rgb(0, 201, 255), rgb(1, 254, 135));
+    background-size: 200% 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s ease-in-out;
+    animation: gradientMove 2s linear infinite;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  &:not(:hover)::after {
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.5s ease-in-out;
+  }
 }
 
 .identity {
@@ -129,6 +158,15 @@ onUnmounted(() => {
       position: relative;
     }
   }
+}
+
+.identity-text {
+  background: linear-gradient(90deg, rgb(1, 254, 135), rgb(0, 201, 255), rgb(1, 254, 135));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientMove 3s linear infinite;
 }
 
 .letter-a {
@@ -147,12 +185,21 @@ onUnmounted(() => {
 @keyframes blink {
   0%,
   50% {
-    border-right: 5px solid #ffffff;
+    border-right: 5px solid rgb(255, 255, 255);
+    opacity: 0.8;
   }
 
   51%,
   100% {
-    border-right: 0px solid #ffffff;
+    border-right: 2px solid rgb(255, 255, 255);
+    opacity: 0;
+  }
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    border-right: 5px solid rgb(255, 255, 255);
   }
 }
 
@@ -166,6 +213,15 @@ onUnmounted(() => {
   60%,
   80% {
     width: 110%;
+  }
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
   }
 }
 </style>

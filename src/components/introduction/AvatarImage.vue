@@ -1,7 +1,7 @@
 <template>
   <div class="avatar-wrapper">
     <div class="box" :class="{ open: isShow }" ref="box">
-      <SvgIcon class="icon" v-for="(icon, index) in icons" :name="icon.icon" :key="index" />
+      <SvgIcon class="icon" v-for="(icon, index) in icons" :name="icon.icon" :key="index" @click="handleIconClick(icon.url)" />
     </div>
     <div class="photo" :class="{ open: isShow }" @click="isShow = !isShow">
       <img ref="avatar" src="@/assets/images/avatar.jpg" alt="" />
@@ -15,16 +15,25 @@ import SvgIcon from '../SvgIcon/SvgIcon.vue'
 import { useResizeObserver } from '@vueuse/core'
 const isShow = ref<boolean>(false)
 const icons = reactive([
-  { icon: 'github', name: 'github' },
-  { icon: 'gitee', name: 'gitee' },
-  { icon: 'QQ', name: 'QQ' },
-  { icon: 'WeChat', name: 'WeChat' },
-  { icon: 'gmail', name: 'email' },
+  { icon: 'github', name: 'github', url: 'https://github.com/zibengjia' },
+  { icon: 'gitee', name: 'gitee', url: 'https://gitee.com/zibengjia' },
+  { icon: 'QQ', name: 'QQ', url: '#' },
+  { icon: 'WeChat', name: 'WeChat', url: '#' },
+  { icon: 'gmail', name: 'email', url: 'mailto:zhaoyeguo@qq.com' },
+  { icon: 'bilibili', name: 'bilibili', url: 'https://space.bilibili.com/453879065' },
 ])
 const avatar = ref<HTMLElement | null>(null)
 const box = ref<HTMLElement | null>(null)
 const avatarWidth = ref(0)
 const boxWidth = ref(0)
+const handleIconClick = (url: string) => {
+  if (url !== '#' && url !== '') {
+    window.open(url, '_blank')
+  } else {
+    alert('暂未开放')
+  }
+}
+
 useResizeObserver(avatar, (entries) => {
   const entry = entries[0]
   if (entry) {
@@ -57,6 +66,7 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
   animation: show-shell 0.5s forwards ease-in-out;
   perspective: 1000px;
 }
@@ -69,21 +79,23 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   overflow: hidden;
   border: 4px solid rgba(245, 253, 220, 0.85);
   box-shadow:
-    0 2px 10px rgba(72, 187, 120, 0.5),
-    0 5px 15px rgba(245, 158, 11, 0.45),
-    0 10px 25px rgba(16, 185, 129, 0.4),
+    -2 2px 10px rgba(72, 187, 120, 0.5),
+    -5 5px 15px rgba(245, 158, 11, 0.45),
+    -8 10px 25px rgba(16, 185, 129, 0.4),
     0 0 0 2px rgba(255, 255, 255, 0.6) inset;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
-  animation: rotate-photo 1s forwards ease-in-out;
+  animation:
+    rotate-photo 1s forwards ease-in-out,
+    breathe 2s infinite ease-in-out;
 
   &:hover {
     transform: translateY(-5px) scale(1.02);
     box-shadow:
-      0 5px 15px rgba(72, 187, 120, 0.7),
-      0 10px 25px rgba(245, 158, 11, 0.65),
-      0 15px 36px rgba(16, 185, 129, 0.6),
+      -5px 5px 15px rgba(72, 187, 120, 0.7),
+      -10px 10px 25px rgba(245, 158, 11, 0.65),
+      -15px 15px 36px rgba(16, 185, 129, 0.6),
       0 0 0 2px rgba(255, 255, 255, 0.9) inset;
   }
 }
@@ -165,6 +177,30 @@ svg {
 @keyframes rotate-photo {
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes breathe {
+  0% {
+    box-shadow:
+      0 2px 10px rgba(72, 187, 120, 0.5),
+      0 5px 15px rgba(245, 158, 11, 0.45),
+      0 10px 25px rgba(16, 185, 129, 0.4),
+      0 0 0 2px rgba(255, 255, 255, 0.6) inset;
+  }
+  50% {
+    box-shadow:
+      -5px 5px 25px rgba(72, 187, 120, 0.9),
+      -10px 10px 35px rgba(245, 158, 11, 0.85),
+      -15px 15px 50px rgba(16, 185, 129, 0.8),
+      0 0 0 3px rgba(255, 255, 255, 1) inset;
+  }
+  100% {
+    box-shadow:
+      -2px 2px 10px rgba(72, 187, 120, 0.5),
+      -5px 5px 15px rgba(245, 158, 11, 0.45),
+      -8px 8px 25px rgba(16, 185, 129, 0.4),
+      0 0 0 2px rgba(255, 255, 255, 0.6) inset;
   }
 }
 

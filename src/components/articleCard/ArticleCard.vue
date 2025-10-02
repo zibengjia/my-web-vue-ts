@@ -98,17 +98,18 @@ const handleClick = () => {
 
 // 处理关闭操作
 const handleClose = () => {
-  isExpanded.value = false
-  // 向父组件传递0，表示关闭当前文章
-  emit('cardClick', 0)
-  // 重置滚动位置
-  document.documentElement.scrollTop = 0
-  document.body.scrollTop = 0
-  // 强制重置卡片的滚动位置
-  const cardElement = document.querySelector('.card')
+  // 先将卡片滚动到顶部
+  const cardElement = document.querySelector('.card.expanded')
   if (cardElement) {
     cardElement.scrollTop = 0
   }
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+
+  // 然后执行关闭操作
+  isExpanded.value = false
+  // 向父组件传递0，表示关闭当前文章
+  emit('cardClick', 0)
 }
 </script>
 
