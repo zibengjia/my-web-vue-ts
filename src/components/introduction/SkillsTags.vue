@@ -8,12 +8,6 @@
         <SvgIcon class="skill" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
           <p>{{ skill.name }}</p>
         </SvgIcon>
-        <SvgIcon class="skill" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
-          <p>{{ skill.name }}</p>
-        </SvgIcon>
-        <SvgIcon class="skill" v-for="(skill, index) in skillItems" :key="index" :name="skill.icon" width="50px" height="50px">
-          <p>{{ skill.name }}</p>
-        </SvgIcon>
       </div>
     </div>
     <div class="interest-wrapper">
@@ -41,13 +35,6 @@ const skillItems = reactive([
   { icon: 'vueuse', name: 'vueuse' },
 ])
 const interestItems = reactive([
-  { name: '篮球', id: '1' },
-  { name: '足球', id: '2' },
-  { name: '羽毛球', id: '3' },
-  { name: '乒乓球', id: '4' },
-  { name: '游泳', id: '5' },
-  { name: '旅游', id: '6' },
-  { name: '游戏', id: '7' },
   { name: '极限竞速', id: '1' },
   { name: '足球', id: '2' },
   { name: '羽毛球', id: '3' },
@@ -82,7 +69,6 @@ const interestItems = reactive([
 
 .skill-wrapper {
   width: auto;
-  height: 50%;
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row-reverse;
@@ -119,15 +105,6 @@ const interestItems = reactive([
   overflow: auto;
   padding: 0.4rem;
   margin-top: 1rem;
-}
-
-@keyframes tech-move {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
 }
 
 @keyframes skill-move {

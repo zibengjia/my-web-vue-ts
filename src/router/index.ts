@@ -35,7 +35,7 @@ router.beforeEach((to, from, next) => {
 router.afterEach((to) => {
   // 设置标题
   if (to.meta.title) {
-    document.title = to.meta.title as string
+    document.title = (import.meta.env.VITE_WEB_TITLE + ' | ' + to.meta.title) as string
   }
 })
 export default router

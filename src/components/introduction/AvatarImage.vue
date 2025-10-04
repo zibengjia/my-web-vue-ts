@@ -66,9 +66,8 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
+
   animation: show-shell 0.5s forwards ease-in-out;
-  perspective: 1000px;
 }
 
 .photo {
@@ -76,27 +75,29 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   height: min(360px, 30vw);
   aspect-ratio: 1/1;
   border-radius: 50%;
+  cursor: pointer;
   overflow: hidden;
   border: 4px solid rgba(245, 253, 220, 0.85);
   box-shadow:
-    -2 2px 10px rgba(72, 187, 120, 0.5),
-    -5 5px 15px rgba(245, 158, 11, 0.45),
-    -8 10px 25px rgba(16, 185, 129, 0.4),
-    0 0 0 2px rgba(255, 255, 255, 0.6) inset;
+    -0px 0px 10px rgba(72, 187, 120, 0.4),
+    -0px 0px 15px rgba(245, 158, 11, 0.35),
+    -0px 0px 25px rgba(16, 185, 129, 0.3),
+    0 0 0 2px rgba(255, 255, 255, 0.4) inset;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
-  animation:
-    rotate-photo 1s forwards ease-in-out,
-    breathe 2s infinite ease-in-out;
+  animation: breathe 2s infinite ease-in-out;
 
   &:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-5px) scale(1.04) rotate(360deg);
     box-shadow:
       -5px 5px 15px rgba(72, 187, 120, 0.7),
       -10px 10px 25px rgba(245, 158, 11, 0.65),
       -15px 15px 36px rgba(16, 185, 129, 0.6),
       0 0 0 2px rgba(255, 255, 255, 0.9) inset;
+    transition:
+      transform 0.8s ease,
+      box-shadow 0.3s ease;
   }
 }
 .photo img {
@@ -151,9 +152,9 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   left: 20px;
   opacity: 1;
 }
-@for $i from 1 through 5 {
+@for $i from 1 through 6 {
   .box.open .icon:nth-child(#{$i}) {
-    $angle: $startAngle + math.div(($endAngle - $startAngle) * $i, 5);
+    $angle: $startAngle + math.div(($endAngle - $startAngle) * $i, 6);
     transform: rotate($angle) translateX($rotationRadius) rotate(-$angle);
     transition-delay: #{$i * 0.15s};
     transition-duration: 1s;

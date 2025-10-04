@@ -10,7 +10,7 @@
       </p>
     </div>
     <div class="emotional-state">
-      <p>😖<span>痛苦</span></p>
+      <p>😔<span>无奈</span></p>
     </div>
   </div>
 </template>

@@ -252,10 +252,12 @@ $article-content-font-size: 1rem;
 .card.collapsed {
   width: 0;
   height: 0;
+  opacity: 0;
   overflow: hidden;
   transition:
     width 0.3s ease,
-    height 0.3s ease;
+    height 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .card.collapsed * {

@@ -26,6 +26,14 @@ export const homeRoutes: RouteRecordRaw = {
       component: () => import('@/views/home/ArticlePage.vue'),
     },
     {
+      path: 'footprints',
+      name: 'Footprints',
+      meta: {
+        title: '足迹',
+      },
+      component: () => import('@/views/home/FootprintsPage.vue'),
+    },
+    {
       path: 'activity',
       name: 'Activity',
       meta: {
