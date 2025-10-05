@@ -95,7 +95,7 @@ onUnmounted(() => {
     content: 'Hello';
     position: absolute;
     height: 100%;
-    top: -1px;
+    top: -10px;
     left: -1px;
     padding-left: 0.5rem;
     overflow: hidden;

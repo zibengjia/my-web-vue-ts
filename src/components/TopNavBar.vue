@@ -1,36 +1,37 @@
 <template>
-  <!--svg滤镜-->
-  <svg style="display: none">
-    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
-      <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence" />
-      <!-- Seeds: 14, 17,  -->
+  <teleport to="#teleport-target" v-if="uiStore.showTopNav">
+    <!--svg滤镜-->
+    <svg style="display: none">
+      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence" />
+        <!-- Seeds: 14, 17,  -->
 
-      <feComponentTransfer in="turbulence" result="mapped">
-        <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
-        <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
-        <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
-      </feComponentTransfer>
+        <feComponentTransfer in="turbulence" result="mapped">
+          <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+          <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+          <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+        </feComponentTransfer>
 
-      <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+        <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
 
-      <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100" lighting-color="white" result="specLight">
-        <fePointLight x="-200" y="-200" z="300" />
-      </feSpecularLighting>
+        <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100" lighting-color="white" result="specLight">
+          <fePointLight x="-200" y="-200" z="300" />
+        </feSpecularLighting>
 
-      <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
+        <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
 
-      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="150" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  </svg>
+        <feDisplacementMap in="SourceGraphic" in2="softMap" scale="150" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
 
-  <div class="wrapper" :class="{ scrolledBefore: ScrolledBefore, loading: isLoading }">
+    <div class="wrapper" :class="{ scrolledBefore: ScrolledBefore, loading: isLoading }">
     <div class="liquidGlass-wrapper">
       <div class="liquidGlass-effect"></div>
       <div class="liquidGlass-tint"></div>
       <div class="liquidGlass-shine"></div>
       <div class="liquidGlass-text navbar">
         <!-- 左侧logo-->
-        <div class="navbar-logo">
+        <div class="navbar-logo" @click="goToHome">
           <svg id="logo" width="94" height="94" viewBox="0 0 94 94" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns-xlink="http://www.w3.org/1999/xlink">
             <path d="M79.8 3H18.2C10.9098 3 5 8.90984 5 16.2V77.8C5 85.0902 10.9098 91 18.2 91H79.8C87.0902 91 93 85.0902 93 77.8V16.2C93 8.90984 87.0902 3 79.8 3Z" fill="#FF6B6B" />
             <path d="M19.5833 27.4167H31.3333H43.0833L19.5833 66.5833H43.0833" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -55,18 +56,28 @@
         <div class="navbar-right">right</div>
       </div>
     </div>
-  </div>
+    </div>
+  </teleport>
 </template>
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUIStore } from '@/stores/uiStore'
 import { homeRoutes } from '@/router/routes/homeRoutes'
 
+const router = useRouter()
+const uiStore = useUIStore()
 const routes = reactive([...(homeRoutes.children || [])])
 const navItems = routes.map((route) => ({
   name: route.meta?.title,
   path: route.path,
 }))
+
+// 点击logo回到首页
+const goToHome = () => {
+  router.push('/')
+}
 const link = ref<HTMLElement[]>([])
 const ScrolledBefore = ref(true)
 const isLoading = ref(true)
@@ -197,6 +208,9 @@ onUnmounted(() => {
         }
       }
     }
+    .navbar-logo {
+      pointer-events: auto;
+    }
   }
 }
 
@@ -215,6 +229,9 @@ onUnmounted(() => {
 /* Logo 样式 */
 .navbar-logo {
   height: 60px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 10;
 }
 
 #logo {

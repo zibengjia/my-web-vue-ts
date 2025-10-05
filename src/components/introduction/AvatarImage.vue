@@ -79,10 +79,10 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
   overflow: hidden;
   border: 4px solid rgba(245, 253, 220, 0.85);
   box-shadow:
-    -0px 0px 10px rgba(72, 187, 120, 0.4),
-    -0px 0px 15px rgba(245, 158, 11, 0.35),
-    -0px 0px 25px rgba(16, 185, 129, 0.3),
-    0 0 0 2px rgba(255, 255, 255, 0.4) inset;
+    -0px 0px 10px rgba(72, 187, 120, 0.3),
+    -0px 0px 15px rgba(245, 158, 11, 0.3),
+    -0px 0px 25px rgba(16, 185, 129, 0.25),
+    0 0 0 2px rgba(255, 255, 255, 0.1) inset;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
@@ -96,8 +96,8 @@ $rotationRadius: v-bind(rotationRadius); //旋转半径
       -15px 15px 36px rgba(16, 185, 129, 0.6),
       0 0 0 2px rgba(255, 255, 255, 0.9) inset;
     transition:
-      transform 0.8s ease,
-      box-shadow 0.3s ease;
+      transform 0.8s ease 0.3s,
+      box-shadow 0.3s ease 0s;
   }
 }
 .photo img {

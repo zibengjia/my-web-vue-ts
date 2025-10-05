@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <div id="teleport-target"></div>
     <router-view />
     <DynamicIslandNotification />
   </div>
@@ -12,5 +13,5 @@ const DynamicIslandNotification = defineAsyncComponent(() => import('@/component
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/index.scss';
+/* 样式内容 */
 </style>

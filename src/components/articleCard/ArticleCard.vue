@@ -124,16 +124,23 @@ $article-info-font-size-expanded: 1rem;
 $article-content-overview-font-size: 0.8rem;
 $article-content-font-size: 1rem;
 
-.catalog {
-  position: fixed;
-  right: 100px;
-  top: 100px;
-  z-index: 1000;
-  display: none;
+.card {
+  .catalog {
+    position: fixed;
+    right: 100px;
+    top: 100px;
+    z-index: 1000;
+    display: none;
+  }
 }
 
-.card.expanded .catalog {
-  display: block;
+.card.expanded {
+  .catalog {
+    display: block;
+  }
+  .content {
+    margin-left: 5rem;
+  }
 }
 
 .card {
@@ -153,7 +160,6 @@ $article-content-font-size: 1rem;
     position: relative;
     width: 100%;
     height: 100%;
-    padding: 0rem 1.2rem;
 
     .image {
       height: 12.5em;
@@ -215,6 +221,7 @@ $article-content-font-size: 1rem;
       }
     }
     .content-overview {
+      padding: 0rem 1.2rem;
       margin-top: 1rem;
       opacity: 1;
       transition: opacity 0.2s ease;

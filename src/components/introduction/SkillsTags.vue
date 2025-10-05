@@ -78,6 +78,7 @@ const interestItems = reactive([
   min-height: 120px;
   width: 50px;
   padding: 1rem 1.5rem;
+  box-sizing: content-box;
 
   p {
     font-size: 1rem;
