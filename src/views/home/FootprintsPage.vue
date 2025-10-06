@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '@/stores/uiStore'
-import AMap from '@/components/BaiduMap/AMap.vue'
+import AMap from '@/components/AMap/AMap.vue'
 
 // 使用Pinia store控制TopNavBar显示/隐藏
 const uiStore = useUIStore()
