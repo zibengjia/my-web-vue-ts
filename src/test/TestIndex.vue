@@ -1,11 +1,11 @@
 <template>
   <div>
-    <AMap />
+    <PhotoUpdate />
   </div>
 </template>
 
 <script setup lang="ts">
-import AMap from '@/components/AMap/AMap.vue'
+import PhotoUpdate from '@/components/photoUpdate/PhotoUpdate.vue'
 </script>
 
 <style scoped lang="scss"></style>
