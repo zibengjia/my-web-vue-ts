@@ -1,0 +1,139 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "R2 Bucket API",
+    "description": "一个基于 Cloudflare Workers 和 R2 的简单对象存储 API。支持通过 PUT 上传、GET 下载和 DELETE 删除对象。",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://zbj235.dpdns.org",
+      "description": "生产环境"
+    }
+  ],
+  "paths": {
+    "/{key}": {
+      "parameters": [
+        {
+          "name": "key",
+          "in": "path",
+          "description": "对象在存储桶中的唯一键名，可以包含路径，例如 'folder/image.png'。",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "获取对象",
+        "description": "根据指定的 key 获取存储桶中的对象内容。",
+        "tags": [
+          "Object"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取对象",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "对象的内容类型，由 R2 自动推断。"
+              },
+              "etag": {
+                "description": "对象的 ETag 值，可用于缓存验证。"
+              }
+            }
+          },
+          "404": {
+            "description": "对象未找到"
+          }
+        }
+      },
+      "put": {
+        "summary": "上传或覆盖对象",
+        "description": "上传一个新的对象或覆盖一个已存在的对象。如果对象已存在且未设置 'Overwrite' 头，则会返回 409 错误。",
+        "tags": [
+          "Object"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Overwrite",
+            "in": "header",
+            "description": "设置为 'true' 以强制覆盖已存在的对象。",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "要上传的对象内容，可以是任意二进制或文本数据。",
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "对象上传成功"
+          },
+          "403": {
+            "description": "认证失败，缺少或无效的 X-Custom-Auth-Key 头。"
+          },
+          "409": {
+            "description": "对象已存在，且未提供 'Overwrite: true' 请求头。"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除对象",
+        "description": "根据指定的 key 删除存储桶中的对象。",
+        "tags": [
+          "Object"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "对象删除成功"
+          },
+          "403": {
+            "description": "认证失败，缺少或无效的 X-Custom-Auth-Key 头。"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Custom-Auth-Key",
+        "description": "用于 PUT 和 DELETE 请求的认证密钥，其值必须与 Workers 的 `AUTH_KEY_SECRET` 环境变量匹配。"
+      }
+    }
+  }
+}

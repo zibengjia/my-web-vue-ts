@@ -124,25 +124,6 @@ $article-info-font-size-expanded: 1rem;
 $article-content-overview-font-size: 0.8rem;
 $article-content-font-size: 1rem;
 
-<<<<<<< HEAD
-.card {
-  .catalog {
-    position: fixed;
-    right: 100px;
-    top: 100px;
-    z-index: 1000;
-    display: none;
-  }
-}
-
-.card.expanded {
-  .catalog {
-    display: block;
-  }
-  .content {
-    margin-left: 5rem;
-  }
-=======
 .catalog {
   position: sticky;
   right: 6rem;
@@ -153,7 +134,6 @@ $article-content-font-size: 1rem;
 }
 .md-preview {
   margin-right: 8rem;
->>>>>>> f18715c8f052bdec5fb68bcd5d93801935a7eae2
 }
 
 .card {

@@ -40,20 +40,20 @@
 
         <!-- 提交按钮 -->
         <div class="submit-section">
-          <button @click="submitSinglePhoto" class="action-btn submit-btn" :disabled="isSubmitting">
-            {{ isSubmitting ? '提交中...' : '提交到服务器' }}
+          <button @click="uploadSinglePhoto" class="action-btn submit-btn" :disabled="isUploading">
+            {{ isUploading ? '上传中...' : '上传到R2存储桶' }}
           </button>
 
-          <!-- 提交状态 -->
-          <div v-if="submitStatus !== 'idle'" class="submit-status" :class="submitStatus">
-            <div class="status-message">{{ submitMessage }}</div>
+          <!-- 上传状态 -->
+          <div v-if="uploadStatus !== 'idle'" class="submit-status" :class="uploadStatus">
+            <div class="status-message">{{ uploadMessage }}</div>
 
             <!-- 进度条 -->
-            <div v-if="submitStatus === 'submitting' && submitProgress > 0" class="progress-container">
+            <div v-if="uploadStatus === 'uploading' && uploadProgress > 0" class="progress-container">
               <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: `${submitProgress}%` }"></div>
+                <div class="progress-fill" :style="{ width: `${uploadProgress}%` }"></div>
               </div>
-              <div class="progress-text">{{ submitProgress }}%</div>
+              <div class="progress-text">{{ uploadProgress }}%</div>
             </div>
           </div>
         </div>
@@ -90,23 +90,23 @@
                 <div class="file-size">{{ formatFileSize(file.size) }}</div>
               </div>
               <div class="file-status">
-                <span v-if="file.status === 'pending'" class="status-pending">等待处理</span>
-                <span v-else-if="file.status === 'processing'" class="status-processing">处理中...</span>
+                <span v-if="file.status === 'pending'" class="status-pending">等待上传</span>
+                <span v-else-if="file.status === 'uploading'" class="status-processing">上传中...</span>
                 <span v-else-if="file.status === 'completed'" class="status-completed">已完成</span>
-                <span v-else-if="file.status === 'error'" class="status-error">处理失败</span>
+                <span v-else-if="file.status === 'error'" class="status-error">上传失败</span>
               </div>
               <button @click.stop="removeFile(index)" class="remove-file-btn">✕</button>
             </div>
           </div>
           <div class="batch-actions">
-            <button @click.stop="processBatchFiles" class="action-btn process-btn" :disabled="isProcessing || batchFiles.length === 0">
-              {{ isProcessing ? `处理中 (${completedCount}/${batchFiles.length})` : '开始批量处理' }}
+            <button @click.stop="uploadBatchFiles" class="action-btn process-btn" :disabled="isUploading || batchFiles.length === 0">
+              {{ isUploading ? `上传中 (${completedCount}/${batchFiles.length})` : '开始批量上传' }}
             </button>
             <button @click.stop="triggerBatchFileInput" class="action-btn add-more-btn">添加更多</button>
           </div>
 
           <!-- 进度条 -->
-          <div v-if="isProcessing" class="progress-container">
+          <div v-if="isUploading" class="progress-container">
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: `${progressPercentage}%` }"></div>
             </div>
@@ -115,43 +115,30 @@
         </div>
       </div>
 
-      <!-- 批量处理结果 -->
+      <!-- 批量上传结果 -->
       <div v-if="batchResults.length > 0" class="batch-results">
-        <h3>批量处理结果</h3>
-
-        <!-- 批量提交按钮 -->
-        <div class="batch-submit-section">
-          <button @click="submitBatchPhotos" class="action-btn batch-submit-btn" :disabled="isSubmitting">
-            {{ isSubmitting ? '批量提交中...' : '批量提交到服务器' }}
-          </button>
-
-          <!-- 批量提交状态 -->
-          <div v-if="submitStatus !== 'idle'" class="submit-status" :class="submitStatus">
-            <div class="status-message">{{ submitMessage }}</div>
-
-            <!-- 进度条 -->
-            <div v-if="submitStatus === 'submitting'" class="progress-container">
-              <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: `${submitProgress}%` }"></div>
-              </div>
-              <div class="progress-text">{{ submitProgress }}%</div>
-            </div>
-          </div>
-        </div>
+        <h3>批量上传结果</h3>
 
         <div class="batch-results-grid">
           <div v-for="(result, index) in batchResults" :key="index" class="result-card">
             <div class="result-header">
               <h4>{{ result.fileName || `图片 ${index + 1}` }}</h4>
               <span v-if="result.error" class="error-badge">错误</span>
+              <span v-else class="success-badge">成功</span>
             </div>
             <div v-if="result.error" class="error-message">
               {{ result.error }}
             </div>
-            <div v-else class="exif-grid">
-              <div class="exif-item" v-for="(value, key) in formatExifData(result)" :key="key">
-                <span class="exif-label">{{ key }}:</span>
-                <span class="exif-value">{{ value }}</span>
+            <div v-else>
+              <div class="file-url">
+                <span class="exif-label">访问链接:</span>
+                <a :href="result.url" target="_blank" class="file-link">{{ result.url }}</a>
+              </div>
+              <div v-if="result.exifData" class="exif-grid">
+                <div class="exif-item" v-for="(value, key) in formatExifData(result.exifData)" :key="key">
+                  <span class="exif-label">{{ key }}:</span>
+                  <span class="exif-value">{{ value }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -163,7 +150,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { readExifFromFile, formatExifData, processMultipleFiles } from '@/utils/exifr/exifr'
+import { readExifFromFile, formatExifData } from '@/utils/exifr/exifr'
+import { uploadToR2 } from '@/utils/Update/r2Upload'
 
 // 定义EXIF数据类型
 interface ExifData {
@@ -172,14 +160,22 @@ interface ExifData {
   fileName?: string | undefined
 }
 
+// 上传结果接口
+interface UploadResult {
+  fileName?: string
+  url?: string
+  exifData?: ExifData
+  error?: string
+}
+
 // 批量处理文件接口
 interface BatchFile {
   file: File
   name: string
   size: number
   thumbnail: string
-  status: 'pending' | 'processing' | 'completed' | 'error'
-  exifData?: ExifData
+  status: 'pending' | 'uploading' | 'completed' | 'error'
+  result?: UploadResult
   error?: string
 }
 
@@ -188,22 +184,21 @@ const mode = ref<'single' | 'batch'>('single')
 
 // 单张照片相关
 const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
 const imageUrl = ref<string>('')
 const exifData = ref<ExifData | null>(null)
 
 // 批量处理相关
 const batchFileInput = ref<HTMLInputElement | null>(null)
 const batchFiles = ref<BatchFile[]>([])
-const batchResults = ref<ExifData[]>([])
-const isProcessing = ref(false)
+const batchResults = ref<UploadResult[]>([])
+const isUploading = ref(false)
 const completedCount = ref(0)
 
-// 提交相关
-const isSubmitting = ref(false)
-const submitProgress = ref(0)
-const submitStatus = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
-const submitMessage = ref('')
-const serverUrl = ref('http://localhost:3000/api/photos') // 服务器API地址
+// 上传相关
+const uploadProgress = ref(0)
+const uploadStatus = ref<'idle' | 'uploading' | 'success' | 'error'>('idle')
+const uploadMessage = ref('')
 
 // 触发文件选择
 const triggerFileInput = () => {
@@ -233,6 +228,9 @@ const processFile = (file: File) => {
     return
   }
 
+  // 保存文件引用
+  selectedFile.value = file
+
   // 创建图片URL
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -255,6 +253,7 @@ const processFile = (file: File) => {
 const clearImage = () => {
   imageUrl.value = ''
   exifData.value = null
+  selectedFile.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -363,196 +362,131 @@ const progressPercentage = computed(() => {
   return Math.round((completedCount.value / batchFiles.value.length) * 100)
 })
 
-// 处理批量文件
-const processBatchFiles = async () => {
+// 上传批量文件
+const uploadBatchFiles = async () => {
   if (batchFiles.value.length === 0) return
 
-  isProcessing.value = true
+  isUploading.value = true
   completedCount.value = 0
   batchResults.value = []
 
   // 重置所有文件状态
   batchFiles.value.forEach((file) => {
     file.status = 'pending'
-    file.exifData = undefined
+    file.result = undefined
     file.error = undefined
   })
 
-  // 获取所有文件对象
-  const files = batchFiles.value.map((item) => item.file)
-
   try {
-    // 使用批量处理函数
-    const results = await processMultipleFiles(files, (completed, total) => {
-      completedCount.value = completed
+    // 逐个上传文件
+    for (let i = 0; i < batchFiles.value.length; i++) {
+      const batchFile = batchFiles.value[i]
 
-      // 更新文件状态
-      if (completed <= batchFiles.value.length) {
-        batchFiles.value[completed - 1].status = 'completed'
-      }
+      // 设置当前文件为上传中状态
+      batchFile.status = 'uploading'
 
-      // 如果还有文件在等待，设置下一个文件为处理中
-      if (completed < total) {
-        batchFiles.value[completed].status = 'processing'
-      }
-    })
+      // 生成唯一键名
+      const key = batchFile.file.name
 
-    // 保存结果
-    batchResults.value = results
+      // 上传到R2
+      const result = await uploadToR2({
+        key,
+        file: batchFile.file,
+        overwrite: true,
+        onProgress: (progress) => {
+          // 对于批量上传，我们不显示每个文件的详细进度，只显示整体进度
+          // 可以在这里添加单个文件的进度显示逻辑
+        },
+      })
 
-    // 更新文件状态
-    results.forEach((result, index) => {
-      if (result.error) {
-        batchFiles.value[index].status = 'error'
-        batchFiles.value[index].error = result.error
+      // 增加完成计数
+      completedCount.value++
+
+      if (result.success) {
+        // 上传成功，更新状态
+        batchFile.status = 'completed'
+
+        // 读取EXIF数据
+        let exifData = null
+        try {
+          exifData = await readExifFromFile(batchFile.file)
+        } catch (error) {
+          console.error(`读取 ${batchFile.name} 的EXIF数据失败:`, error)
+        }
+
+        // 添加到结果列表
+        batchResults.value.push({
+          fileName: batchFile.name,
+          url: `${result.key}`,
+          exifData: exifData || undefined,
+        })
       } else {
-        batchFiles.value[index].exifData = result
-      }
-    })
+        // 上传失败，更新状态
+        batchFile.status = 'error'
+        batchFile.error = result.message || '上传失败'
 
-    // 完成处理
-    isProcessing.value = false
+        // 添加到结果列表
+        batchResults.value.push({
+          fileName: batchFile.name,
+          error: batchFile.error,
+        })
+      }
+    }
+
+    // 完成上传
+    isUploading.value = false
   } catch (error) {
-    console.error('批量处理失败:', error)
-    isProcessing.value = false
-    alert('批量处理失败: ' + error)
+    console.error('批量上传失败:', error)
+    isUploading.value = false
+    alert('批量上传失败: ' + error)
   }
 }
 
-// 提交单张图片和EXIF信息到服务器
-const submitSinglePhoto = async () => {
-  if (!fileInput.value?.files || fileInput.value.files.length === 0) {
+// 上传单张图片到R2存储桶
+const uploadSinglePhoto = async () => {
+  if (!selectedFile.value) {
     alert('请先选择图片')
     return
   }
 
-  const file = fileInput.value.files[0]
-
-  if (!exifData.value) {
-    alert('EXIF数据尚未加载完成')
-    return
-  }
-
-  isSubmitting.value = true
-  submitStatus.value = 'submitting'
-  submitMessage.value = '正在提交图片...'
+  isUploading.value = true
+  uploadStatus.value = 'uploading'
+  uploadMessage.value = '正在上传图片...'
+  uploadProgress.value = 0
 
   try {
-    const formData = new FormData()
-    formData.append('image', file)
-    formData.append('exifData', JSON.stringify(exifData.value))
+    const key = selectedFile.value.name
 
-    const response = await fetch(serverUrl.value, {
-      method: 'POST',
-      body: formData,
+    // 上传到R2
+    const result = await uploadToR2({
+      key,
+      file: selectedFile.value,
+      overwrite: true,
+      onProgress: (progress) => {
+        uploadProgress.value = progress
+      },
     })
 
-    if (!response.ok) {
-      throw new Error(`服务器响应错误: ${response.status} ${response.statusText}`)
-    }
+    if (result.success) {
+      uploadStatus.value = 'success'
+      uploadMessage.value = `图片上传成功!`
 
-    const result = await response.json()
-
-    submitStatus.value = 'success'
-    submitMessage.value = `图片提交成功! ID: ${result.id || '未知'}`
-
-    // 3秒后重置状态
-    setTimeout(() => {
-      submitStatus.value = 'idle'
-      submitMessage.value = ''
-    }, 3000)
-  } catch (error) {
-    console.error('提交图片失败:', error)
-    submitStatus.value = 'error'
-    submitMessage.value = `提交失败: ${(error as any)?.message || '未知错误'}`
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// 提交批量图片和EXIF信息到服务器
-const submitBatchPhotos = async () => {
-  if (batchResults.value.length === 0) {
-    alert('没有可提交的结果')
-    return
-  }
-
-  isSubmitting.value = true
-  submitStatus.value = 'submitting'
-  submitMessage.value = '正在批量提交图片...'
-  submitProgress.value = 0
-
-  try {
-    const total = batchResults.value.length
-    let successCount = 0
-    let errorCount = 0
-    const errors: string[] = []
-
-    // 逐个提交图片
-    for (let i = 0; i < total; i++) {
-      const result = batchResults.value[i]
-
-      // 跳过有错误的结果
-      if (result.error) {
-        errorCount++
-        errors.push(`${result.fileName || `图片 ${i + 1}`}: ${result.error}`)
-        continue
-      }
-
-      // 找到对应的文件
-      const batchFile = batchFiles.value.find((f) => f.name === result.fileName)
-      if (!batchFile) {
-        errorCount++
-        errors.push(`找不到文件: ${result.fileName || `图片 ${i + 1}`}`)
-        continue
-      }
-
-      try {
-        const formData = new FormData()
-        formData.append('image', batchFile.file)
-        formData.append('exifData', JSON.stringify(result))
-
-        const response = await fetch(serverUrl.value, {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          throw new Error(`服务器响应错误: ${response.status} ${response.statusText}`)
-        }
-
-        successCount++
-      } catch (error) {
-        errorCount++
-        errors.push(`${result.fileName || `图片 ${i + 1}`}: ${(error as any).message || '未知错误'}`)
-      }
-
-      // 更新进度
-      submitProgress.value = Math.round(((i + 1) / total) * 100)
-    }
-
-    // 设置最终状态
-    if (errorCount === 0) {
-      submitStatus.value = 'success'
-      submitMessage.value = `所有图片提交成功! 共 ${successCount} 张`
+      // 3秒后重置状态
+      setTimeout(() => {
+        uploadStatus.value = 'idle'
+        uploadMessage.value = ''
+        uploadProgress.value = 0
+      }, 3000)
     } else {
-      submitStatus.value = 'error'
-      submitMessage.value = `部分图片提交失败: 成功 ${successCount} 张, 失败 ${errorCount} 张`
-      console.error('提交错误:', errors)
+      uploadStatus.value = 'error'
+      uploadMessage.value = result.message || '上传失败'
     }
-
-    // 5秒后重置状态
-    setTimeout(() => {
-      submitStatus.value = 'idle'
-      submitMessage.value = ''
-      submitProgress.value = 0
-    }, 5000)
   } catch (error) {
-    console.error('批量提交失败:', error)
-    submitStatus.value = 'error'
-    submitMessage.value = `批量提交失败: ${(error as any).message || '未知错误'}`
+    console.error('上传图片失败:', error)
+    uploadStatus.value = 'error'
+    uploadMessage.value = `上传失败: ${(error as any)?.message || '未知错误'}`
   } finally {
-    isSubmitting.value = false
+    isUploading.value = false
   }
 }
 </script>
@@ -674,6 +608,15 @@ const submitBatchPhotos = async () => {
 
 .exif-value {
   color: #303133;
+}
+
+.file-url {
+  margin-bottom: 10px;
+}
+
+.file-link {
+  color: #409eff;
+  word-break: break-all;
 }
 
 /* 批量处理相关样式 */
@@ -900,6 +843,14 @@ const submitBatchPhotos = async () => {
 
 .error-badge {
   background-color: #f56c6c;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.success-badge {
+  background-color: #67c23a;
   color: white;
   font-size: 12px;
   padding: 2px 6px;
