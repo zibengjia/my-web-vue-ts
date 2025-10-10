@@ -1,11 +1,11 @@
 <template>
   <div>
-    <PhotoUpdate />
+    <PhotoManagePage />
   </div>
 </template>
 
 <script setup lang="ts">
-import PhotoUpdate from '@/components/photoUpdate/PhotoUpdate.vue'
+import PhotoManagePage from '@/views/admin/PhotoManagePage.vue'
 </script>
 
 <style scoped lang="scss"></style>

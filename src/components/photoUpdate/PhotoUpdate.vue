@@ -22,6 +22,10 @@
         </div>
         <div v-else class="image-preview">
           <img :src="imageUrl" alt="上传的图片" />
+          <div class="image-info">
+            <div class="file-name">{{ selectedFile?.name }}</div>
+            <div class="file-size">{{ formatFileSize(selectedFile?.size || 0) }}</div>
+          </div>
           <div class="image-actions">
             <button @click.stop="triggerFileInput" class="action-btn replace-btn">更换图片</button>
             <button @click.stop="clearImage" class="action-btn clear-btn">清除</button>
@@ -35,6 +39,15 @@
           <div class="exif-item" v-for="(value, key) in displayExifData" :key="key">
             <span class="exif-label">{{ key }}:</span>
             <span class="exif-value">{{ value }}</span>
+          </div>
+        </div>
+
+        <!-- 景区名字输入 -->
+        <div class="scenic-input-section">
+          <h3>景区信息</h3>
+          <div class="input-group">
+            <label for="scenic-name">景区名称:</label>
+            <input id="scenic-name" type="text" v-model="scenicName" placeholder="请输入景区名称" class="scenic-input" />
           </div>
         </div>
 
@@ -53,7 +66,10 @@
               <div class="progress-bar">
                 <div class="progress-fill" :style="{ width: `${uploadProgress}%` }"></div>
               </div>
-              <div class="progress-text">{{ uploadProgress }}%</div>
+              <div class="progress-info">
+                <div class="progress-text">{{ uploadProgress }}%</div>
+                <div v-if="uploadSpeed > 0" class="upload-speed">{{ formatSpeed(uploadSpeed) }}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -90,7 +106,8 @@
                 <div class="file-size">{{ formatFileSize(file.size) }}</div>
               </div>
               <div class="file-status">
-                <span v-if="file.status === 'pending'" class="status-pending">等待上传</span>
+                <span v-if="file.status === 'pending'" class="status-pending">等待解析</span>
+                <span v-else-if="file.status === 'parsed'" class="status-parsed">已解析</span>
                 <span v-else-if="file.status === 'uploading'" class="status-processing">上传中...</span>
                 <span v-else-if="file.status === 'completed'" class="status-completed">已完成</span>
                 <span v-else-if="file.status === 'error'" class="status-error">上传失败</span>
@@ -99,7 +116,10 @@
             </div>
           </div>
           <div class="batch-actions">
-            <button @click.stop="uploadBatchFiles" class="action-btn process-btn" :disabled="isUploading || batchFiles.length === 0">
+            <button @click.stop="parseBatchFiles" class="action-btn parse-btn" :disabled="isParsing || batchFiles.length === 0">
+              {{ isParsing ? '解析中...' : '解析图片信息' }}
+            </button>
+            <button @click.stop="uploadBatchFiles" class="action-btn process-btn" :disabled="isUploading || batchFiles.length === 0 || !allFilesParsed">
               {{ isUploading ? `上传中 (${completedCount}/${batchFiles.length})` : '开始批量上传' }}
             </button>
             <button @click.stop="triggerBatchFileInput" class="action-btn add-more-btn">添加更多</button>
@@ -111,6 +131,30 @@
               <div class="progress-fill" :style="{ width: `${progressPercentage}%` }"></div>
             </div>
             <div class="progress-text">{{ completedCount }} / {{ batchFiles.length }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 解析信息显示 -->
+      <div v-if="hasParsedFiles" class="batch-exif-section">
+        <h3>图片解析信息</h3>
+        <div class="batch-exif-grid">
+          <div v-for="(file, index) in parsedFiles" :key="index" class="exif-card">
+            <div class="exif-card-header">
+              <h4>{{ file.name }}</h4>
+              <button @click="toggleExifDetail(index)" class="toggle-btn">
+                {{ showExifDetail[index] ? '收起' : '展开' }}
+              </button>
+            </div>
+            <div v-if="showExifDetail[index]" class="exif-card-body">
+              <div v-if="file.exifData" class="exif-grid">
+                <div class="exif-item" v-for="(value, key) in formatExifData(file.exifData)" :key="key">
+                  <span class="exif-label">{{ key }}:</span>
+                  <span class="exif-value">{{ value }}</span>
+                </div>
+              </div>
+              <div v-else class="no-exif">无EXIF数据</div>
+            </div>
           </div>
         </div>
       </div>
@@ -160,6 +204,7 @@
 import { ref, computed } from 'vue'
 import { readExifFromFile, formatExifData, convertGPSToDecimal } from '@/utils/exifr/exifr'
 import { uploadToR2 } from '@/utils/Update/r2Upload'
+import type { PhotoPO } from '@/apis/photo/photoTypes'
 
 // 定义EXIF数据类型
 interface ExifData {
@@ -190,9 +235,10 @@ interface BatchFile {
   name: string
   size: number
   thumbnail: string
-  status: 'pending' | 'uploading' | 'completed' | 'error'
+  status: 'pending' | 'uploading' | 'completed' | 'error' | 'parsed'
   result?: UploadResult
   error?: string
+  exifData?: ExifData
 }
 
 // 模式：单张或批量
@@ -212,10 +258,22 @@ const batchResults = ref<UploadResult[]>([])
 const isUploading = ref(false)
 const completedCount = ref(0)
 
+// 解析相关
+const isParsing = ref(false)
+const showExifDetail = ref<Record<number, boolean>>({})
+
 // 上传相关
 const uploadProgress = ref(0)
 const uploadStatus = ref<'idle' | 'uploading' | 'success' | 'error'>('idle')
 const uploadMessage = ref('')
+
+// 景区名字
+const scenicName = ref('')
+
+// 上传网速相关
+const uploadSpeed = ref(0) // 上传速度，单位KB/s
+const lastUploadTime = ref(0) // 上次计算时间戳
+const lastUploadedBytes = ref(0) // 上次上传字节数
 
 // 触发文件选择
 const triggerFileInput = () => {
@@ -297,11 +355,6 @@ const convertDMSToDD = (dms: number[]) => {
   return degrees + minutes / 60 + seconds / 3600
 }
 
-// 生成唯一ID
-const generateUniqueId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2)
-}
-
 // 切换模式
 const switchMode = (newMode: 'single' | 'batch') => {
   mode.value = newMode
@@ -362,9 +415,64 @@ const removeFile = (index: number) => {
 const clearBatchFiles = () => {
   batchFiles.value = []
   batchResults.value = []
+  showExifDetail.value = {}
   if (batchFileInput.value) {
     batchFileInput.value.value = ''
   }
+}
+
+// 解析批量文件的EXIF信息
+const parseBatchFiles = async () => {
+  if (batchFiles.value.length === 0) return
+
+  isParsing.value = true
+
+  try {
+    // 重置所有文件状态
+    batchFiles.value.forEach((file, index) => {
+      if (file.status !== 'completed' && file.status !== 'error') {
+        file.status = 'pending'
+      }
+    })
+
+    // 逐个解析文件
+    for (let i = 0; i < batchFiles.value.length; i++) {
+      const batchFile = batchFiles.value[i]
+
+      // 如果已经完成或错误，跳过
+      if (batchFile.status === 'completed' || batchFile.status === 'error') {
+        continue
+      }
+
+      try {
+        // 读取EXIF数据
+        const exifData = await readExifFromFile(batchFile.file)
+
+        // 更新文件状态
+        batchFile.status = 'parsed'
+        batchFile.exifData = exifData
+
+        // 初始化展开状态为false
+        showExifDetail.value[i] = false
+      } catch (error) {
+        console.error(`解析 ${batchFile.name} 的EXIF数据失败:`, error)
+        // 即使解析失败，也标记为已解析状态，但记录错误
+        batchFile.status = 'parsed'
+        batchFile.error = `解析失败: ${(error as any)?.message || '未知错误'}`
+        showExifDetail.value[i] = false
+      }
+    }
+  } catch (error) {
+    console.error('批量解析失败:', error)
+    alert('批量解析失败: ' + error)
+  } finally {
+    isParsing.value = false
+  }
+}
+
+// 切换EXIF详情显示
+const toggleExifDetail = (index: number) => {
+  showExifDetail.value[index] = !showExifDetail.value[index]
 }
 
 // 格式化文件大小
@@ -378,19 +486,82 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// 计算上传速度
+const calculateUploadSpeed = (uploadedBytes: number): void => {
+  const currentTime = Date.now()
+
+  // 如果是第一次调用，只记录当前状态
+  if (lastUploadTime.value === 0) {
+    lastUploadTime.value = currentTime
+    lastUploadedBytes.value = uploadedBytes
+    return
+  }
+
+  // 计算时间差（秒）和字节数差
+  const timeDiff = (currentTime - lastUploadTime.value) / 1000 // 转换为秒
+  const bytesDiff = uploadedBytes - lastUploadedBytes.value
+
+  // 避免除以零和时间间隔太小的情况
+  if (timeDiff > 0 && bytesDiff > 0) {
+    // 计算速度（KB/s）
+    const speedInKBs = bytesDiff / timeDiff / 1024
+    uploadSpeed.value = Math.round(speedInKBs)
+
+    // 更新上次状态
+    lastUploadTime.value = currentTime
+    lastUploadedBytes.value = uploadedBytes
+  }
+}
+
+// 格式化网速显示
+const formatSpeed = (speedInKBs: number): string => {
+  if (speedInKBs < 1024) {
+    return `${speedInKBs} KB/s`
+  } else {
+    return `${(speedInKBs / 1024).toFixed(2)} MB/s`
+  }
+}
+
 // 进度百分比
 const progressPercentage = computed(() => {
   if (batchFiles.value.length === 0) return 0
   return Math.round((completedCount.value / batchFiles.value.length) * 100)
 })
 
+// 检查是否所有文件都已解析
+const allFilesParsed = computed(() => {
+  return batchFiles.value.length > 0 && batchFiles.value.every((file) => file.status === 'parsed')
+})
+
+// 获取已解析的文件
+const parsedFiles = computed(() => {
+  return batchFiles.value.filter((file) => file.status === 'parsed')
+})
+
+// 检查是否有已解析的文件
+const hasParsedFiles = computed(() => {
+  return parsedFiles.value.length > 0
+})
+
 // 上传批量文件
 const uploadBatchFiles = async () => {
   if (batchFiles.value.length === 0) return
 
+  // 检查是否所有文件都已解析
+  const unparsedFiles = batchFiles.value.filter((file) => file.status !== 'parsed')
+  if (unparsedFiles.length > 0) {
+    alert(`请先解析所有图片的EXIF信息，还有 ${unparsedFiles.length} 张图片未解析`)
+    return
+  }
+
   isUploading.value = true
   completedCount.value = 0
   batchResults.value = []
+
+  // 重置网速相关状态
+  uploadSpeed.value = 0
+  lastUploadTime.value = 0
+  lastUploadedBytes.value = 0
 
   // 重置所有文件状态
   batchFiles.value.forEach((file) => {
@@ -447,13 +618,8 @@ const uploadBatchFiles = async () => {
         // 上传成功，更新状态
         batchFile.status = 'completed'
 
-        // 读取EXIF数据
-        let exifData = null
-        try {
-          exifData = await readExifFromFile(batchFile.file)
-        } catch (error) {
-          console.error(`读取 ${batchFile.name} 的EXIF数据失败:`, error)
-        }
+        // 使用已解析的EXIF数据
+        const exifData = batchFile.exifData || null
 
         // 上传照片数据到后端API
         try {
@@ -461,8 +627,7 @@ const uploadBatchFiles = async () => {
           const { addPhoto } = await import('@/apis/photo/photoApi')
 
           // 准备照片数据
-          const photoData = {
-            photoId: generateUniqueId(), // 生成唯一ID
+          const photoData: PhotoPO = {
             photoName: batchFile.name,
             photoUrl: `https://zbj235.dpdns.org/${originalResult.key}`,
             thumbnailName: thumbnailFile.name,
@@ -471,8 +636,8 @@ const uploadBatchFiles = async () => {
             maker: exifData?.Make || '',
             lat: exifData?.GPSLatitude ? String(convertGPSToDecimal(exifData.GPSLatitude, exifData.GPSLatitudeRef)) : '',
             lng: exifData?.GPSLongitude ? String(convertGPSToDecimal(exifData.GPSLongitude, exifData.GPSLongitudeRef)) : '',
-            createDateTime: exifData?.DateTimeOriginal || new Date().toISOString(),
-            updateDateTime: new Date().toISOString(),
+            createDateTime: exifData?.DateTimeOriginal || new Date().toISOString().replace('Z', ''),
+            spotName: scenicName.value, // 添加景区名称
           }
 
           // 调用API保存照片数据
@@ -482,15 +647,15 @@ const uploadBatchFiles = async () => {
             console.log('API响应:', apiResult)
 
             if (apiResult.data.code === 0) {
-            // 添加到结果列表，包含照片ID
-            batchResults.value.push({
-              fileName: batchFile.name,
-              url: `https://zbj235.dpdns.org/${originalResult.key}`,
-              thumbnailUrl: `https://zbj235.dpdns.org/${thumbResult.key}`,
-              exifData: exifData || undefined,
-              photoId: apiResult.data.data, // 添加照片ID
-            })
-          } else {
+              // 添加到结果列表，包含照片ID
+              batchResults.value.push({
+                fileName: batchFile.name,
+                url: `https://zbj235.dpdns.org/${originalResult.key}`,
+                thumbnailUrl: `https://zbj235.dpdns.org/${thumbResult.key}`,
+                exifData: exifData || undefined,
+                photoId: apiResult.data.data, // 添加照片ID
+              })
+            } else {
               throw new Error(apiResult.data.message || '保存照片信息失败')
             }
           } catch (apiError) {
@@ -598,6 +763,11 @@ const uploadSinglePhoto = async () => {
   uploadMessage.value = '正在生成缩略图...'
   uploadProgress.value = 0
 
+  // 重置网速相关状态
+  uploadSpeed.value = 0
+  lastUploadTime.value = 0
+  lastUploadedBytes.value = 0
+
   try {
     // 生成缩略图
     const thumbnailFile = await generateThumbnail(selectedFile.value)
@@ -611,6 +781,9 @@ const uploadSinglePhoto = async () => {
       overwrite: true,
       onProgress: (progress) => {
         uploadProgress.value = Math.round(progress / 2) // 原图占50%进度
+        // 计算上传速度
+        const uploadedBytes = (selectedFile.value?.size || 0) * (progress / 100)
+        calculateUploadSpeed(uploadedBytes)
       },
     })
 
@@ -627,6 +800,11 @@ const uploadSinglePhoto = async () => {
       overwrite: true,
       onProgress: (progress) => {
         uploadProgress.value = 50 + Math.round(progress / 2) // 缩略图占50%进度
+        // 计算上传速度
+        const totalOriginalSize = selectedFile.value?.size || 0
+        const thumbnailSize = thumbnailFile.size
+        const uploadedBytes = totalOriginalSize + thumbnailSize * (progress / 100)
+        calculateUploadSpeed(uploadedBytes)
       },
     })
 
@@ -639,8 +817,7 @@ const uploadSinglePhoto = async () => {
       const { addPhoto } = await import('@/apis/photo/photoApi')
 
       // 准备照片数据
-      const photoData = {
-        photoId: generateUniqueId(), // 生成唯一ID
+      const photoData: PhotoPO = {
         photoName: selectedFile.value.name,
         photoUrl: `https://zbj235.dpdns.org/${originalResult.key}`,
         thumbnailName: thumbnailFile.name,
@@ -649,8 +826,8 @@ const uploadSinglePhoto = async () => {
         maker: exifData.value?.Make || '',
         lat: exifData.value?.GPSLatitude ? String(convertGPSToDecimal(exifData.value.GPSLatitude, exifData.value.GPSLatitudeRef)) : '',
         lng: exifData.value?.GPSLongitude ? String(convertGPSToDecimal(exifData.value.GPSLongitude, exifData.value.GPSLongitudeRef)) : '',
-        createDateTime: exifData.value?.DateTimeOriginal || new Date().toISOString(),
-        updateDateTime: new Date().toISOString(),
+        createDateTime: exifData.value?.DateTimeOriginal || new Date().toISOString().replace('Z', ''),
+        spotName: scenicName.value, // 添加景区名称
       }
 
       // 调用API保存照片数据
@@ -660,16 +837,16 @@ const uploadSinglePhoto = async () => {
         console.log('API响应:', apiResult)
 
         if (apiResult.data.code === 0) {
-        uploadStatus.value = 'success'
-        uploadMessage.value = `图片和缩略图上传成功! 照片ID: ${apiResult.data.data}`
-        uploadProgress.value = 100
+          uploadStatus.value = 'success'
+          uploadMessage.value = `图片和缩略图上传成功! 照片ID: ${apiResult.data.data}`
+          uploadProgress.value = 100
 
-        // 3秒后重置状态
-        setTimeout(() => {
-          uploadStatus.value = 'idle'
-          uploadMessage.value = ''
-          uploadProgress.value = 0
-        }, 3000)
+          // 3秒后重置状态
+          setTimeout(() => {
+            uploadStatus.value = 'idle'
+            uploadMessage.value = ''
+            uploadProgress.value = 0
+          }, 3000)
         } else {
           throw new Error(apiResult.data.message || '保存照片信息失败')
         }
@@ -735,6 +912,9 @@ const uploadSinglePhoto = async () => {
 
 .image-preview {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .image-preview img {
@@ -743,6 +923,26 @@ const uploadSinglePhoto = async () => {
   display: block;
   margin: 0 auto;
   border-radius: 4px;
+}
+
+.image-info {
+  margin: 10px 0;
+  text-align: center;
+  width: 100%;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 14px;
+  color: #909399;
 }
 
 .image-actions {
@@ -946,6 +1146,10 @@ const uploadSinglePhoto = async () => {
   color: #f56c6c;
 }
 
+.status-parsed {
+  color: #67c23a;
+}
+
 .remove-file-btn {
   background: none;
   border: none;
@@ -991,6 +1195,20 @@ const uploadSinglePhoto = async () => {
   background-color: #85ce61;
 }
 
+.parse-btn {
+  background-color: #e6a23c;
+  color: white;
+}
+
+.parse-btn:hover:not(:disabled) {
+  background-color: #ebb563;
+}
+
+.parse-btn:disabled {
+  background-color: #f5dab1;
+  cursor: not-allowed;
+}
+
 .progress-container {
   margin-top: 15px;
 }
@@ -1009,14 +1227,94 @@ const uploadSinglePhoto = async () => {
   transition: width 0.3s ease;
 }
 
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .progress-text {
-  text-align: center;
   font-size: 14px;
   color: #606266;
 }
 
+.upload-speed {
+  font-size: 14px;
+  color: #409eff;
+  font-weight: 500;
+}
+
 .batch-results {
   margin-top: 30px;
+}
+
+.batch-exif-section {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+}
+
+.batch-exif-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #303133;
+}
+
+.batch-exif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.exif-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.exif-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: #ecf5ff;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.exif-card-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #303133;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.toggle-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background-color: #409eff;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+  background-color: #66b1ff;
+}
+
+.exif-card-body {
+  padding: 15px;
+}
+
+.no-exif {
+  color: #909399;
+  font-style: italic;
 }
 
 .batch-results-grid {
@@ -1139,5 +1437,45 @@ const uploadSinglePhoto = async () => {
 .status-message {
   font-weight: 500;
   margin-bottom: 10px;
+}
+
+/* 景区名字输入相关样式 */
+.scenic-input-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #409eff;
+}
+
+.scenic-input-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #303133;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-weight: 500;
+  color: #606266;
+}
+
+.scenic-input {
+  padding: 8px 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.scenic-input:focus {
+  outline: none;
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
 </style>

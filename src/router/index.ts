@@ -25,7 +25,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  //禁止访问admin及其子路由
+  // 禁止访问admin及其子路由
   if (to.path === '/admin') {
     next('/login')
   } else {
