@@ -131,8 +131,16 @@
             </div>
             <div v-else>
               <div class="file-url">
-                <span class="exif-label">访问链接:</span>
+                <span class="exif-label">原图链接:</span>
                 <a :href="result.url" target="_blank" class="file-link">{{ result.url }}</a>
+              </div>
+              <div v-if="result.thumbnailUrl" class="file-url">
+                <span class="exif-label">缩略图链接:</span>
+                <a :href="result.thumbnailUrl" target="_blank" class="file-link">{{ result.thumbnailUrl }}</a>
+              </div>
+              <div v-if="result.photoId" class="file-url">
+                <span class="exif-label">照片ID:</span>
+                <span class="file-link">{{ result.photoId }}</span>
               </div>
               <div v-if="result.exifData" class="exif-grid">
                 <div class="exif-item" v-for="(value, key) in formatExifData(result.exifData)" :key="key">
@@ -150,7 +158,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { readExifFromFile, formatExifData } from '@/utils/exifr/exifr'
+import { readExifFromFile, formatExifData, convertGPSToDecimal } from '@/utils/exifr/exifr'
 import { uploadToR2 } from '@/utils/Update/r2Upload'
 
 // 定义EXIF数据类型
@@ -158,13 +166,21 @@ interface ExifData {
   [key: string]: any
   error?: string | undefined
   fileName?: string | undefined
+  latitude?: number // 添加latitude属性，兼容旧代码
+  longitude?: number // 添加longitude属性，兼容旧代码
+  GPSLatitude?: number[] // 纬度（度分秒格式）
+  GPSLatitudeRef?: string // 纬度方向参考 (N/S)
+  GPSLongitude?: number[] // 经度（度分秒格式）
+  GPSLongitudeRef?: string // 经度方向参考 (E/W)
 }
 
 // 上传结果接口
 interface UploadResult {
   fileName?: string
   url?: string
+  thumbnailUrl?: string
   exifData?: ExifData
+  photoId?: string
   error?: string
 }
 
@@ -186,6 +202,7 @@ const mode = ref<'single' | 'batch'>('single')
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const imageUrl = ref<string>('')
+const thumbnailUrl = ref<string>('')
 const exifData = ref<ExifData | null>(null)
 
 // 批量处理相关
@@ -239,7 +256,7 @@ const processFile = (file: File) => {
     // 获取EXIF数据
     readExifFromFile(file)
       .then((output) => {
-        console.log('EXIF数据:', output) // 添加调试日志
+        console.log('EXIF数据:', output) //添加调试日志
         exifData.value = output
       })
       .catch((error) => {
@@ -278,6 +295,11 @@ const convertDMSToDD = (dms: number[]) => {
   const minutes = dms[1]
   const seconds = dms[2]
   return degrees + minutes / 60 + seconds / 3600
+}
+
+// 生成唯一ID
+const generateUniqueId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
 
 // 切换模式
@@ -388,10 +410,29 @@ const uploadBatchFiles = async () => {
       // 生成唯一键名
       const key = batchFile.file.name
 
-      // 上传到R2
-      const result = await uploadToR2({
+      // 生成缩略图
+      const thumbnailFile = await generateThumbnail(batchFile.file)
+
+      // 上传原图到R2
+      const originalResult = await uploadToR2({
         key,
         file: batchFile.file,
+        overwrite: true,
+        onProgress: (progress) => {
+          // 对于批量上传，我们不显示每个文件的详细进度，只显示整体进度
+          // 可以在这里添加单个文件的进度显示逻辑
+        },
+      })
+
+      if (!originalResult.success) {
+        throw new Error(originalResult.message || '原图上传失败')
+      }
+
+      // 上传缩略图到R2
+      const thumbKey = thumbnailFile.name
+      const thumbResult = await uploadToR2({
+        key: thumbKey,
+        file: thumbnailFile,
         overwrite: true,
         onProgress: (progress) => {
           // 对于批量上传，我们不显示每个文件的详细进度，只显示整体进度
@@ -402,7 +443,7 @@ const uploadBatchFiles = async () => {
       // 增加完成计数
       completedCount.value++
 
-      if (result.success) {
+      if (thumbResult.success) {
         // 上传成功，更新状态
         batchFile.status = 'completed'
 
@@ -414,16 +455,68 @@ const uploadBatchFiles = async () => {
           console.error(`读取 ${batchFile.name} 的EXIF数据失败:`, error)
         }
 
-        // 添加到结果列表
-        batchResults.value.push({
-          fileName: batchFile.name,
-          url: `${result.key}`,
-          exifData: exifData || undefined,
-        })
+        // 上传照片数据到后端API
+        try {
+          // 导入API函数
+          const { addPhoto } = await import('@/apis/photo/photoApi')
+
+          // 准备照片数据
+          const photoData = {
+            photoId: generateUniqueId(), // 生成唯一ID
+            photoName: batchFile.name,
+            photoUrl: `https://zbj235.dpdns.org/${originalResult.key}`,
+            thumbnailName: thumbnailFile.name,
+            thumbnailUrl: `https://zbj235.dpdns.org/${thumbResult.key}`,
+            exif: JSON.stringify(exifData || {}),
+            maker: exifData?.Make || '',
+            lat: exifData?.GPSLatitude ? String(convertGPSToDecimal(exifData.GPSLatitude, exifData.GPSLatitudeRef)) : '',
+            lng: exifData?.GPSLongitude ? String(convertGPSToDecimal(exifData.GPSLongitude, exifData.GPSLongitudeRef)) : '',
+            createDateTime: exifData?.DateTimeOriginal || new Date().toISOString(),
+            updateDateTime: new Date().toISOString(),
+          }
+
+          // 调用API保存照片数据
+          console.log('正在保存照片数据到API:', JSON.stringify(photoData, null, 2))
+          try {
+            const apiResult = await addPhoto(photoData)
+            console.log('API响应:', apiResult)
+
+            if (apiResult.data.code === 0) {
+            // 添加到结果列表，包含照片ID
+            batchResults.value.push({
+              fileName: batchFile.name,
+              url: `https://zbj235.dpdns.org/${originalResult.key}`,
+              thumbnailUrl: `https://zbj235.dpdns.org/${thumbResult.key}`,
+              exifData: exifData || undefined,
+              photoId: apiResult.data.data, // 添加照片ID
+            })
+          } else {
+              throw new Error(apiResult.data.message || '保存照片信息失败')
+            }
+          } catch (apiError) {
+            console.error('API调用错误详情:', apiError)
+            // 检查是否是响应拦截器处理过的错误
+            if (apiError instanceof Error) {
+              throw apiError
+            } else {
+              throw new Error('保存照片信息时发生未知错误')
+            }
+          }
+        } catch (apiError) {
+          console.error(`保存 ${batchFile.name} 的照片信息失败:`, apiError)
+          // 即使API调用失败，也添加到结果列表，但标记错误
+          batchResults.value.push({
+            fileName: batchFile.name,
+            url: `https://zbj235.dpdns.org/${originalResult.key}`,
+            thumbnailUrl: `https://zbj235.dpdns.org/${thumbResult.key}`,
+            exifData: exifData || undefined,
+            error: `图片上传成功，但保存照片信息失败: ${(apiError as any)?.message || '未知错误'}`,
+          })
+        }
       } else {
         // 上传失败，更新状态
         batchFile.status = 'error'
-        batchFile.error = result.message || '上传失败'
+        batchFile.error = thumbResult.message || '缩略图上传失败'
 
         // 添加到结果列表
         batchResults.value.push({
@@ -442,6 +535,57 @@ const uploadBatchFiles = async () => {
   }
 }
 
+// 生成缩略图
+const generateThumbnail = (file: File, maxWidth = 300, maxHeight = 300): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+
+    img.onload = () => {
+      // 计算缩略图尺寸，保持宽高比
+      let width = img.width
+      let height = img.height
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height)
+          height = maxHeight
+        }
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      // 绘制缩略图
+      ctx?.drawImage(img, 0, 0, width, height)
+
+      // 转换为Blob并创建File对象
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            // 创建缩略图文件名，添加"_thumb"后缀
+            const fileName = file.name.substring(0, file.name.lastIndexOf('.')) + '_thumb' + file.name.substring(file.name.lastIndexOf('.'))
+            const thumbnailFile = new File([blob], fileName, { type: file.type })
+            resolve(thumbnailFile)
+          } else {
+            resolve(file) // 如果生成失败，返回原文件
+          }
+        },
+        file.type,
+        0.8,
+      ) // 0.8质量
+    }
+
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 // 上传单张图片到R2存储桶
 const uploadSinglePhoto = async () => {
   if (!selectedFile.value) {
@@ -451,35 +595,95 @@ const uploadSinglePhoto = async () => {
 
   isUploading.value = true
   uploadStatus.value = 'uploading'
-  uploadMessage.value = '正在上传图片...'
+  uploadMessage.value = '正在生成缩略图...'
   uploadProgress.value = 0
 
   try {
-    const key = selectedFile.value.name
+    // 生成缩略图
+    const thumbnailFile = await generateThumbnail(selectedFile.value)
 
-    // 上传到R2
-    const result = await uploadToR2({
-      key,
+    // 上传原图
+    uploadMessage.value = '正在上传原图...'
+    const originalKey = selectedFile.value.name
+    const originalResult = await uploadToR2({
+      key: originalKey,
       file: selectedFile.value,
       overwrite: true,
       onProgress: (progress) => {
-        uploadProgress.value = progress
+        uploadProgress.value = Math.round(progress / 2) // 原图占50%进度
       },
     })
 
-    if (result.success) {
-      uploadStatus.value = 'success'
-      uploadMessage.value = `图片上传成功!`
+    if (!originalResult.success) {
+      throw new Error(originalResult.message || '原图上传失败')
+    }
 
-      // 3秒后重置状态
-      setTimeout(() => {
-        uploadStatus.value = 'idle'
-        uploadMessage.value = ''
-        uploadProgress.value = 0
-      }, 3000)
+    // 上传缩略图
+    uploadMessage.value = '正在上传缩略图...'
+    const thumbKey = thumbnailFile.name
+    const thumbResult = await uploadToR2({
+      key: thumbKey,
+      file: thumbnailFile,
+      overwrite: true,
+      onProgress: (progress) => {
+        uploadProgress.value = 50 + Math.round(progress / 2) // 缩略图占50%进度
+      },
+    })
+
+    if (thumbResult.success) {
+      // 上传照片数据到后端API
+      uploadMessage.value = '正在保存照片信息...'
+      uploadProgress.value = 90
+
+      // 导入API函数
+      const { addPhoto } = await import('@/apis/photo/photoApi')
+
+      // 准备照片数据
+      const photoData = {
+        photoId: generateUniqueId(), // 生成唯一ID
+        photoName: selectedFile.value.name,
+        photoUrl: `https://zbj235.dpdns.org/${originalResult.key}`,
+        thumbnailName: thumbnailFile.name,
+        thumbnailUrl: `https://zbj235.dpdns.org/${thumbResult.key}`,
+        exif: JSON.stringify(exifData.value || {}),
+        maker: exifData.value?.Make || '',
+        lat: exifData.value?.GPSLatitude ? String(convertGPSToDecimal(exifData.value.GPSLatitude, exifData.value.GPSLatitudeRef)) : '',
+        lng: exifData.value?.GPSLongitude ? String(convertGPSToDecimal(exifData.value.GPSLongitude, exifData.value.GPSLongitudeRef)) : '',
+        createDateTime: exifData.value?.DateTimeOriginal || new Date().toISOString(),
+        updateDateTime: new Date().toISOString(),
+      }
+
+      // 调用API保存照片数据
+      console.log('正在保存单张照片数据到API:', JSON.stringify(photoData, null, 2))
+      try {
+        const apiResult = await addPhoto(photoData)
+        console.log('API响应:', apiResult)
+
+        if (apiResult.data.code === 0) {
+        uploadStatus.value = 'success'
+        uploadMessage.value = `图片和缩略图上传成功! 照片ID: ${apiResult.data.data}`
+        uploadProgress.value = 100
+
+        // 3秒后重置状态
+        setTimeout(() => {
+          uploadStatus.value = 'idle'
+          uploadMessage.value = ''
+          uploadProgress.value = 0
+        }, 3000)
+        } else {
+          throw new Error(apiResult.data.message || '保存照片信息失败')
+        }
+      } catch (apiError) {
+        console.error('API调用错误详情:', apiError)
+        // 检查是否是响应拦截器处理过的错误
+        if (apiError instanceof Error) {
+          throw apiError
+        } else {
+          throw new Error('保存照片信息时发生未知错误')
+        }
+      }
     } else {
-      uploadStatus.value = 'error'
-      uploadMessage.value = result.message || '上传失败'
+      throw new Error(thumbResult.message || '缩略图上传失败')
     }
   } catch (error) {
     console.error('上传图片失败:', error)

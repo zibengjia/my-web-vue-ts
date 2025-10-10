@@ -23,6 +23,14 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
+    // 记录请求详细信息
+    console.log('发送请求:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    })
+    
     // 可以在这里添加认证 token 等逻辑
     // 例如:
     // const token = localStorage.getItem('token')
@@ -55,7 +63,10 @@ request.interceptors.response.use(
     } else {
       // 业务错误处理
       console.error('API Error:', message)
-      return Promise.reject(new Error(message || '请求失败'))
+      console.error('API Response Data:', response.data)
+      // 添加更多错误信息
+      const errorMessage = `${message || '请求失败'} (错误代码: ${code})`
+      return Promise.reject(new Error(errorMessage))
     }
   },
   (error) => {
