@@ -28,7 +28,8 @@ request.interceptors.request.use(
       url: config.url,
       method: config.method,
       headers: config.headers,
-      data: config.data
+      data: config.data,
+      params: config.params
     })
     
     // 可以在这里添加认证 token 等逻辑
