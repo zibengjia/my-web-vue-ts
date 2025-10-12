@@ -1,5 +1,5 @@
 import request from '@/utils/request/request'
-import type { SpotListResult, SpotResult, OperationResult, Spot } from './spotnameTypes'
+import type { SpotListResult, SpotResult, OperationResult, Spot } from './spotNameTypes'
 
 /**
  * 获取所有景点
@@ -19,8 +19,8 @@ export const getSpots = (page: number, pageSize: number) => {
   return request.get<SpotListResult>('/spots', {
     params: {
       page,
-      pageSize
-    }
+      pageSize,
+    },
   })
 }
 

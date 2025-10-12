@@ -4,7 +4,12 @@
       <form class="filter-form" @submit.prevent="handleSearch">
         <div class="form-group">
           <label for="spotName">景点名称</label>
-          <input type="text" id="spotName" v-model="filterForm.spotName" placeholder="请输入景点名称" class="form-input" />
+          <select id="spotName" v-model="filterForm.spotName" class="form-input">
+            <option value="">全部景点</option>
+            <option v-for="spot in spotList" :key="spot.spotId" :value="spot.spotName">
+              {{ spot.spotName }}
+            </option>
+          </select>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">查询</button>
@@ -16,6 +21,7 @@
     <div class="table-card">
       <div class="table-header">
         <button class="btn btn-primary" @click="showUploadDialog">上传照片</button>
+        <button class="btn btn-primary" @click="showAddSpotDialog">添加景点</button>
       </div>
 
       <div v-if="loading" class="loading-container">
@@ -108,7 +114,12 @@
 
           <div class="form-group">
             <label for="spotNameForm">景点名称 <span class="required">*</span></label>
-            <input type="text" id="spotNameForm" v-model="photoForm.spotName" placeholder="请输入景点名称" class="form-input" required />
+            <select id="spotNameForm" v-model="photoForm.spotName" class="form-input" required>
+              <option value="" disabled>请选择景点名称</option>
+              <option v-for="spot in spotList" :key="spot.spotId" :value="spot.spotName">
+                {{ spot.spotName }}
+              </option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -250,6 +261,39 @@
         </div>
       </div>
     </div>
+
+    <!-- 添加景点对话框 -->
+    <div v-if="addSpotDialogVisible" class="modal-overlay" @click.self="addSpotDialogVisible = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>添加景点</h3>
+          <button class="close-btn" @click="addSpotDialogVisible = false">&times;</button>
+        </div>
+
+        <form class="spot-form" @submit.prevent="submitSpotForm">
+          <div class="form-group">
+            <label for="newSpotName">景点名称 <span class="required">*</span></label>
+            <input type="text" id="newSpotName" v-model="spotForm.spotName" placeholder="请输入景点名称" class="form-input" required />
+            <div class="input-hint">请输入准确的景点名称，该名称将用于照片分类</div>
+          </div>
+
+          <div class="form-group">
+            <label for="newSpotDesc">景点描述</label>
+            <textarea id="newSpotDesc" v-model="spotForm.spotDesc" placeholder="请输入景点描述，如景点特色、位置等信息" class="form-textarea" rows="4"></textarea>
+            <div class="input-hint">景点描述有助于更好地管理和识别景点</div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-default" @click="addSpotDialogVisible = false">
+              <i class="btn-icon-cancel"></i> 取消
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="btn-icon-confirm"></i> 确定添加
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -257,7 +301,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import PhotoUpdate from '@/components/photoUpdate/PhotoUpdate.vue'
 import { getPhotoList, getPhotosBySpotName, getPhotoById, updatePhoto, deletePhoto } from '@/apis/photo/photoApi'
+import { getAllSpots, addSpot } from '@/apis/spotName/spotNameApi'
 import type { PhotoVO, PhotoPO, PhotoDTO } from '@/apis/photo/photoTypes'
+import type { Spot } from '@/apis/spotName/spotNameTypes'
 
 // 筛选表单
 const filterForm = reactive({
@@ -281,6 +327,9 @@ const jumpPage = ref(1)
 // 照片列表
 const photoList = ref<PhotoVO[]>([])
 
+// 景点列表
+const spotList = ref<Spot[]>([])
+
 // 加载状态
 const loading = ref(false)
 
@@ -289,6 +338,7 @@ const dialogVisible = ref(false)
 const viewDialogVisible = ref(false)
 const uploadDialogVisible = ref(false)
 const previewVisible = ref(false)
+const addSpotDialogVisible = ref(false)
 
 // 对话框类型
 const dialogType = ref<'add' | 'edit'>('add')
@@ -313,6 +363,12 @@ const currentPhoto = ref<PhotoDTO | null>(null)
 // 预览图片URL
 const previewUrl = ref('')
 
+// 景点表单
+const spotForm = reactive({
+  spotName: '',
+  spotDesc: ''
+})
+
 // 格式化后的日期时间（用于input[type="datetime-local"]）
 const formattedDateTime = computed({
   get() {
@@ -328,6 +384,7 @@ const formattedDateTime = computed({
 // 初始化加载数据
 onMounted(() => {
   fetchPhotoList()
+  fetchSpotList()
 })
 
 // 获取照片列表
@@ -365,6 +422,21 @@ const fetchPhotoList = async () => {
     alert('获取照片列表时发生异常: ' + (error instanceof Error ? error.message : '未知错误'))
   } finally {
     loading.value = false
+  }
+}
+
+// 获取景点列表
+const fetchSpotList = async () => {
+  try {
+    const response = await getAllSpots()
+    if (response && response.data && response.data.code === 0) {
+      spotList.value = response.data.data || []
+      console.log('景点列表数据:', spotList.value)
+    } else {
+      console.error('获取景点列表失败:', response?.data?.message || '未知错误')
+    }
+  } catch (error) {
+    console.error('获取景点列表异常:', error)
   }
 }
 
@@ -440,6 +512,14 @@ const getPageNumbers = () => {
 // 显示上传对话框
 const showUploadDialog = () => {
   uploadDialogVisible.value = true
+}
+
+// 显示添加景点对话框
+const showAddSpotDialog = () => {
+  // 重置表单
+  spotForm.spotName = ''
+  spotForm.spotDesc = ''
+  addSpotDialogVisible.value = true
 }
 
 // 处理上传成功
@@ -609,6 +689,37 @@ const formatExif = (exifString: string) => {
     return JSON.stringify(exifObj, null, 2)
   } catch (error) {
     return exifString
+  }
+}
+
+// 提交景点表单
+const submitSpotForm = async () => {
+  try {
+    // 验证表单
+    if (!spotForm.spotName.trim()) {
+      alert('请输入景点名称')
+      return
+    }
+
+    // 调用添加景点API
+    const response = await addSpot({
+      spotName: spotForm.spotName.trim(),
+      spotDesc: spotForm.spotDesc.trim()
+    })
+
+    if (response && response.data && response.data.code === 0) {
+      // 添加成功
+      alert('添加景点成功')
+      addSpotDialogVisible.value = false
+      // 刷新景点列表
+      fetchSpotList()
+    } else {
+      console.error('添加景点失败:', response?.data?.message || '未知错误')
+      alert('添加景点失败: ' + (response?.data?.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('添加景点异常:', error)
+    alert('添加景点时发生异常: ' + (error instanceof Error ? error.message : '未知错误'))
   }
 }
 </script>
@@ -1107,5 +1218,32 @@ const formatExif = (exifString: string) => {
   max-height: 80vh;
   border-radius: 4px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* 添加景点对话框样式优化 */
+.spot-form {
+  padding: 20px;
+}
+
+.input-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.btn-icon-cancel::before {
+  content: "✕";
+  margin-right: 5px;
+}
+
+.btn-icon-confirm::before {
+  content: "✓";
+  margin-right: 5px;
+}
+
+.spot-form .form-actions {
+  margin-top: 25px;
+  justify-content: flex-end;
 }
 </style>

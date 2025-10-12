@@ -1,6 +1,6 @@
 interface Point {
   lnglat: [number, number]
-  imgUrl?: string
+  imgUrl: string
   thumbnailUrl?: string
   name?: string
   time?: string
@@ -195,7 +195,7 @@ export const _renderClusterMarker = (context: any, map: any) => {
     if (curZoom < 20) {
       curZoom += 1
     }
-    map.setZoomAndCenter(curZoom, e.lnglat, false, 2000)
+    map.setZoomAndCenter(curZoom, e.lnglat, false, 1000)
   })
 }
 //自定义非聚合点样式
