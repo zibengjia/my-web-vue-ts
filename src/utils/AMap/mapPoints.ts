@@ -1,3 +1,4 @@
+import AMapLoader from '@amap/amap-jsapi-loader'
 interface Point {
   lnglat: [number, number]
   imgUrl: string
@@ -8,38 +9,38 @@ interface Point {
 export const points = [
   { url: '#', lnglat: [113.864691, 22.942327] },
   { url: '2', lnglat: [113.370643, 22.938827] },
-  // { lnglat: [112.985037, 23.15046] },
-  // { lnglat: [110.361899, 20.026695] },
-  // { lnglat: [121.434529, 31.215641] },
-  // { lnglat: [120.682502, 28.011099] },
-  // { lnglat: [126.687123, 45.787618] },
-  // { lnglat: [103.970724, 30.397931] },
-  // { lnglat: [117.212164, 31.831641] },
-  // { lnglat: [121.411101, 31.059407] },
-  // { lnglat: [104.137953, 30.784276] },
-  // { lnglat: [120.499683, 30.042305] },
-  // { lnglat: [108.94686, 34.362975] },
-  // { lnglat: [112.873295, 22.920901] },
-  // { lnglat: [113.373916, 23.086728] },
-  // { lnglat: [113.250159, 23.075847] },
-  // { lnglat: [116.675933, 39.986343] },
-  // { lnglat: [120.75997, 31.734934] },
-  // { lnglat: [118.314741, 32.26999] },
-  // { lnglat: [111.723311, 34.771838] },
-  // { lnglat: [119.537126, 26.200017] },
-  // { lnglat: [113.830123, 23.00734] },
-  // { lnglat: [119.273795, 26.060002] },
-  // { lnglat: [116.466752, 39.951042] },
-  // { lnglat: [114.20716, 22.777829] },
-  // { lnglat: [126.118338, 45.11481] },
-  // { lnglat: [116.366324, 39.781077] },
-  // { lnglat: [120.377998, 31.578216] },
-  // { lnglat: [116.611935, 23.66941] },
-  // { lnglat: [103.787344, 30.940037] },
-  // { lnglat: [112.911223, 23.164952] },
-  // { lnglat: [121.946335, 39.403784] },
-  // { lnglat: [120.172545, 36.009391] },
-  // { lnglat: [126.609854, 45.722514] },
+  { lnglat: [112.985037, 23.15046] },
+  { lnglat: [110.361899, 20.026695] },
+  { lnglat: [121.434529, 31.215641] },
+  { lnglat: [120.682502, 28.011099] },
+  { lnglat: [126.687123, 45.787618] },
+  { lnglat: [103.970724, 30.397931] },
+  { lnglat: [117.212164, 31.831641] },
+  { lnglat: [121.411101, 31.059407] },
+  { lnglat: [104.137953, 30.784276] },
+  { lnglat: [120.499683, 30.042305] },
+  { lnglat: [108.94686, 34.362975] },
+  { lnglat: [112.873295, 22.920901] },
+  { lnglat: [113.373916, 23.086728] },
+  { lnglat: [113.250159, 23.075847] },
+  { lnglat: [116.675933, 39.986343] },
+  { lnglat: [120.75997, 31.734934] },
+  { lnglat: [118.314741, 32.26999] },
+  { lnglat: [111.723311, 34.771838] },
+  { lnglat: [119.537126, 26.200017] },
+  { lnglat: [113.830123, 23.00734] },
+  { lnglat: [119.273795, 26.060002] },
+  { lnglat: [116.466752, 39.951042] },
+  { lnglat: [114.20716, 22.777829] },
+  { lnglat: [126.118338, 45.11481] },
+  { lnglat: [116.366324, 39.781077] },
+  { lnglat: [120.377998, 31.578216] },
+  { lnglat: [116.611935, 23.66941] },
+  { lnglat: [103.787344, 30.940037] },
+  { lnglat: [112.911223, 23.164952] },
+  { lnglat: [121.946335, 39.403784] },
+  { lnglat: [120.172545, 36.009391] },
+  { lnglat: [126.609854, 45.722514] },
   // { lnglat: [120.531699, 32.402873] },
   // { lnglat: [118.914313, 32.013572] },
   // { lnglat: [126.597762, 45.739299] },
@@ -164,50 +165,3 @@ export const points = [
   // { lnglat: [113.532531, 23.518578] },
   // { lnglat: [113.328055, 23.062808] },
 ]
-
-const count = points.length
-//自定义聚合点样式
-export const _renderClusterMarker = (context: any, map: any) => {
-  var factor = Math.pow(context.count / count, 1 / 18)
-  var div = document.createElement('div')
-  var Hue = 180 - factor * 180
-  var bgColor = 'hsla(' + Hue + ',100%,40%,0.7)'
-  var fontColor = 'hsla(' + Hue + ',100%,90%,1)'
-  var borderColor = 'hsla(' + Hue + ',100%,40%,1)'
-  var shadowColor = 'hsla(' + Hue + ',100%,90%,1)'
-  div.style.backgroundColor = bgColor
-  var size = Math.round(30 + Math.pow(context.count / count, 1 / 5) * 20)
-  div.style.width = div.style.height = size + 'px'
-  div.style.border = 'solid 1px ' + borderColor
-  div.style.borderRadius = size / 2 + 'px'
-  div.style.boxShadow = '0 0 5px ' + shadowColor
-  div.innerHTML = context.count
-  div.style.lineHeight = size + 'px'
-  div.style.color = fontColor
-  div.style.fontSize = '14px'
-  div.style.textAlign = 'center'
-  context.marker.setOffset(new AMap.Pixel(-size / 2, -size / 2))
-  context.marker.setContent(div)
-  // 自定义点击事件
-  context.marker.on('click', function (e: { lnglat: any }) {
-    console.log(e)
-    var curZoom = map.getZoom()
-    if (curZoom < 20) {
-      curZoom += 1
-    }
-    map.setZoomAndCenter(curZoom, e.lnglat, false, 1000)
-  })
-}
-//自定义非聚合点样式
-export const _renderMarker = (context: any) => {
-  const data = context.data[0]
-  //自定义点击事件
-  context.marker.on('click', function (e: { lnglat: any }) {
-    console.log(e.lnglat)
-    console.log(data.url)
-  })
-  var content = '<div style="background-color: hsla(180, 100%, 50%, 0.3); height: 2rem; width: 2rem; border: 1px solid hsl(180, 100%, 40%); border-radius: 12px; box-shadow: hsl(180, 100%, 50%) 0px 0px 3px;"></div>'
-  var offset = new AMap.Pixel(-9, -9)
-  context.marker.setContent(content)
-  context.marker.setOffset(offset)
-}

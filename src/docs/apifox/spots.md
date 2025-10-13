@@ -98,9 +98,10 @@ POST /spots
 
 ```json
 {
-  "spotId": 0,
   "spotName": "string",
-  "spotDesc": "string"
+  "spotDesc": "string",
+  "spotPic": "string",
+  "travelTime": "string"
 }
 ```
 
@@ -108,7 +109,7 @@ POST /spots
 
 |名称|位置|类型|必选|说明|
 |---|---|---|---|---|
-|body|body|[SpotDTO](#schemaspotdto)| 否 |none|
+|body|body|[SpotPO](#schemaspotpo)| 否 |none|
 
 > 返回示例
 
@@ -168,9 +169,10 @@ PUT /spots/{spotId}
 
 ```json
 {
-  "spotId": 0,
   "spotName": "string",
-  "spotDesc": "string"
+  "spotDesc": "string",
+  "spotPic": "string",
+  "travelTime": "string"
 }
 ```
 
@@ -179,7 +181,7 @@ PUT /spots/{spotId}
 |名称|位置|类型|必选|说明|
 |---|---|---|---|---|
 |spotId|path|integer| 是 |景点ID|
-|body|body|[SpotDTO](#schemaspotdto)| 否 |none|
+|body|body|[SpotPO](#schemaspotpo)| 否 |none|
 
 > 返回示例
 
@@ -264,7 +266,9 @@ DELETE /spots/{spotId}
 {
   "spotId": 0,
   "spotName": "string",
-  "spotDesc": "string"
+  "spotDesc": "string",
+  "spotPic": "string",
+  "travelTime": "string"
 }
 
 ```
@@ -276,6 +280,8 @@ DELETE /spots/{spotId}
 |spotId|integer(int64)|false|none||景点ID|
 |spotName|string|false|none||景点名称|
 |spotDesc|string|false|none||景点描述|
+|spotPic|string|false|none||景点图片|
+|travelTime|string|false|none||旅游时间|
 
 <h2 id="tocS_ResultListSpotDTO">ResultListSpotDTO</h2>
 
@@ -292,7 +298,9 @@ DELETE /spots/{spotId}
     {
       "spotId": 0,
       "spotName": "string",
-      "spotDesc": "string"
+      "spotDesc": "string",
+      "spotPic": "string",
+      "travelTime": "string"
     }
   ]
 }
@@ -321,7 +329,9 @@ DELETE /spots/{spotId}
   "data": {
     "spotId": 0,
     "spotName": "string",
-    "spotDesc": "string"
+    "spotDesc": "string",
+    "spotPic": "string",
+    "travelTime": "string"
   }
 }
 
@@ -334,4 +344,30 @@ DELETE /spots/{spotId}
 |code|integer|false|none||状态码(0为成功,1为失败)|
 |message|string|false|none||提示信息|
 |data|[SpotDTO](#schemaspotdto)|false|none||json数据|
+
+<h2 id="tocS_SpotPO">SpotPO</h2>
+
+<a id="schemaspotpo"></a>
+<a id="schema_SpotPO"></a>
+<a id="tocSspotpo"></a>
+<a id="tocsspotpo"></a>
+
+```json
+{
+  "spotName": "string",
+  "spotDesc": "string",
+  "spotPic": "string",
+  "travelTime": "string"
+}
+
+```
+
+### 属性
+
+|名称|类型|必选|约束|中文名|说明|
+|---|---|---|---|---|---|
+|spotName|string|false|none||景点名称|
+|spotDesc|string|false|none||景点描述|
+|spotPic|string|false|none||景点图片(缩略图)|
+|travelTime|string|false|none||旅游时间|
 

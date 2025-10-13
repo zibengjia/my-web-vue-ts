@@ -1,5 +1,5 @@
 import request from '@/utils/request/request'
-import type { SpotListResult, SpotResult, OperationResult, Spot } from './spotNameTypes'
+import type { SpotListResult, SpotResult, OperationResult, SpotDTO, SpotPO } from './spotNameTypes'
 
 /**
  * 获取所有景点
@@ -29,7 +29,7 @@ export const getSpots = (page: number, pageSize: number) => {
  * @param spot 景点信息
  * @returns 操作结果
  */
-export const addSpot = (spot: Omit<Spot, 'spotId'>) => {
+export const addSpot = (spot: SpotPO) => {
   return request.post<OperationResult>('/spots', spot)
 }
 
@@ -48,7 +48,7 @@ export const getSpotById = (spotId: number) => {
  * @param spot 景点信息
  * @returns 操作结果
  */
-export const updateSpot = (spotId: number, spot: Spot) => {
+export const updateSpot = (spotId: number, spot: SpotPO) => {
   return request.put<OperationResult>(`/spots/${spotId}`, spot)
 }
 

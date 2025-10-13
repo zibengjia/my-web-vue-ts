@@ -1,264 +1,324 @@
 <template>
   <div class="photo-manage-container">
-    <div class="filter-card">
-      <form class="filter-form" @submit.prevent="handleSearch">
-        <div class="form-group">
-          <label for="spotName">景点名称</label>
-          <select id="spotName" v-model="filterForm.spotName" class="form-input">
-            <option value="">全部景点</option>
-            <option v-for="spot in spotList" :key="spot.spotId" :value="spot.spotName">
-              {{ spot.spotName }}
-            </option>
-          </select>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">查询</button>
-          <button type="button" class="btn btn-default" @click="resetFilter">重置</button>
-        </div>
-      </form>
+    <div class="tab-navigation">
+      <button class="tab-btn" :class="{ active: activeTab === 'photo' }" @click="switchTab('photo')">照片管理</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'spot' }" @click="switchTab('spot')">景点管理</button>
     </div>
 
-    <div class="table-card">
-      <div class="table-header">
-        <button class="btn btn-primary" @click="showUploadDialog">上传照片</button>
-        <button class="btn btn-primary" @click="showAddSpotDialog">添加景点</button>
-      </div>
-
-      <div v-if="loading" class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>加载中...</p>
-      </div>
-
-      <table v-else class="data-table" style="width: 100%">
-        <thead>
-          <tr>
-            <th width="80">ID</th>
-            <th>照片名称</th>
-            <th width="120">照片</th>
-            <th>景点名称</th>
-            <th>拍摄者</th>
-            <th width="180">拍摄时间</th>
-            <th width="200">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in photoList" :key="item.photoId">
-            <td>{{ item.photoId }}</td>
-            <td>{{ item.photoName }}</td>
-            <td>
-              <div class="thumbnail-container">
-                <img :src="item.thumbnailUrl" :alt="item.photoName" class="thumbnail-image" @click="previewImage(item.photoUrl)" @error="handleImageError" />
-                <div v-if="!item.thumbnailUrl" class="image-error">
-                  <span>无图片</span>
-                </div>
-              </div>
-            </td>
-            <td>{{ item.spotName }}</td>
-            <td>{{ item.maker }}</td>
-            <td>{{ item.createDateTime }}</td>
-            <td>
-              <button class="btn-link btn-link-primary" @click="handleEdit(item)">编辑</button>
-              <button class="btn-link btn-link-primary" @click="handleView(item)">查看</button>
-              <button class="btn-link btn-link-danger" @click="confirmDelete(item.photoId)">删除</button>
-            </td>
-          </tr>
-          <tr v-if="photoList.length === 0">
-            <td colspan="7" class="no-data">暂无数据</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pagination-container">
-        <div class="pagination-info">共 {{ pagination.total }} 条记录</div>
-        <div class="pagination-controls">
-          <select v-model="pagination.pageSize" class="page-size-select" @change="handleSizeChange">
-            <option :value="10">10条/页</option>
-            <option :value="20">20条/页</option>
-            <option :value="30">30条/页</option>
-            <option :value="50">50条/页</option>
-          </select>
-
-          <button class="page-btn" :disabled="pagination.page <= 1" @click="handleCurrentChange(pagination.page - 1)">上一页</button>
-
-          <span class="page-numbers">
-            <button v-for="pageNum in getPageNumbers()" :key="pageNum" class="page-number-btn" :class="{ active: pageNum === pagination.page }" @click="typeof pageNum === 'number' && handleCurrentChange(pageNum)">
-              {{ pageNum }}
-            </button>
-          </span>
-
-          <button class="page-btn" :disabled="pagination.page * pagination.pageSize >= pagination.total" @click="handleCurrentChange(pagination.page + 1)">下一页</button>
-
-          <div class="page-jump">
-            <span>前往</span>
-            <input type="number" v-model.number="jumpPage" min="1" :max="Math.ceil(pagination.total / pagination.pageSize)" class="page-jump-input" />
-            <span>页</span>
-            <button class="page-btn" @click="jumpToPage">确定</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 添加/编辑照片对话框 -->
-    <div v-if="dialogVisible" class="modal-overlay" @click.self="dialogVisible = false">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ dialogType === 'add' ? '添加照片' : '编辑照片' }}</h3>
-          <button class="close-btn" @click="dialogVisible = false">&times;</button>
-        </div>
-
-        <form class="photo-form" @submit.prevent="submitForm">
+    <!-- 照片管理区域 -->
+    <div v-if="activeTab === 'photo'">
+      <div class="filter-card">
+        <form class="filter-form" @submit.prevent="handleSearch">
           <div class="form-group">
-            <label for="photoName">照片名称 <span class="required">*</span></label>
-            <input type="text" id="photoName" v-model="photoForm.photoName" placeholder="请输入照片名称" class="form-input" required />
-          </div>
-
-          <div class="form-group">
-            <label for="spotNameForm">景点名称 <span class="required">*</span></label>
-            <select id="spotNameForm" v-model="photoForm.spotName" class="form-input" required>
-              <option value="" disabled>请选择景点名称</option>
+            <label for="spotName">景点名称</label>
+            <select id="spotName" v-model="filterForm.spotName" class="form-input">
+              <option value="">全部景点</option>
               <option v-for="spot in spotList" :key="spot.spotId" :value="spot.spotName">
                 {{ spot.spotName }}
               </option>
             </select>
           </div>
-
-          <div class="form-group">
-            <label for="maker">拍摄者</label>
-            <input type="text" id="maker" v-model="photoForm.maker" placeholder="请输入拍摄者" class="form-input" />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="lat">纬度</label>
-              <input type="text" id="lat" v-model="photoForm.lat" placeholder="纬度" class="form-input" />
-            </div>
-            <div class="form-separator">-</div>
-            <div class="form-group">
-              <label for="lng">经度</label>
-              <input type="text" id="lng" v-model="photoForm.lng" placeholder="经度" class="form-input" />
-            </div>
-          </div>
-
           <div class="form-actions">
-            <button type="button" class="btn btn-default" @click="dialogVisible = false">取消</button>
-            <button type="submit" class="btn btn-primary">确定</button>
+            <button type="submit" class="btn btn-primary">查询</button>
+            <button type="button" class="btn btn-default" @click="resetFilter">重置</button>
           </div>
         </form>
       </div>
-    </div>
 
-    <!-- 查看照片详情对话框 -->
-    <div v-if="viewDialogVisible" class="modal-overlay" @click.self="viewDialogVisible = false">
-      <div class="modal-content modal-large">
-        <div class="modal-header">
-          <h3>照片详情</h3>
-          <button class="close-btn" @click="viewDialogVisible = false">&times;</button>
+      <div class="table-card">
+        <div class="table-header">
+          <button class="btn btn-primary" @click="showUploadDialog">上传照片</button>
+          <button class="btn btn-primary" @click="showAddSpotDialog">添加景点</button>
         </div>
 
-        <div v-if="currentPhoto" class="photo-detail">
-          <div class="photo-image">
-            <img :src="currentPhoto.photoUrl" :alt="currentPhoto.photoName" class="detail-image" @error="handleDetailImageError" />
-            <div v-if="!currentPhoto.photoUrl" class="image-error-large">
-              <span>无法加载图片</span>
+        <div v-if="loading" class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
+        </div>
+
+        <table v-else class="data-table" style="width: 100%">
+          <thead>
+            <tr>
+              <th width="80">ID</th>
+              <th>照片名称</th>
+              <th width="120">照片</th>
+              <th>景点名称</th>
+              <th>拍摄者</th>
+              <th width="180">拍摄时间</th>
+              <th width="200">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in photoList" :key="item.photoId">
+              <td>{{ item.photoId }}</td>
+              <td>{{ item.photoName }}</td>
+              <td>
+                <div class="thumbnail-container">
+                  <img :src="item.thumbnailUrl" :alt="item.photoName" class="thumbnail-image" @click="previewImage(item.photoUrl)" @error="handleImageError" />
+                  <div v-if="!item.thumbnailUrl" class="image-error">
+                    <span>无图片</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ item.spotName }}</td>
+              <td>{{ item.maker }}</td>
+              <td>{{ item.createDateTime }}</td>
+              <td>
+                <button class="btn-link btn-link-primary" @click="handleEdit(item)">编辑</button>
+                <button class="btn-link btn-link-primary" @click="handleView(item)">查看</button>
+                <button class="btn-link btn-link-primary" @click="showSetSpotImageDialog(item)">设为景点缩略图</button>
+                <button class="btn-link btn-link-danger" @click="confirmDelete(item.photoId)">删除</button>
+              </td>
+            </tr>
+            <tr v-if="photoList.length === 0">
+              <td colspan="7" class="no-data">暂无数据</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination-container">
+          <div class="pagination-info">共 {{ pagination.total }} 条记录</div>
+          <div class="pagination-controls">
+            <select v-model="pagination.pageSize" class="page-size-select" @change="handleSizeChange">
+              <option :value="10">10条/页</option>
+              <option :value="20">20条/页</option>
+              <option :value="30">30条/页</option>
+              <option :value="50">50条/页</option>
+            </select>
+
+            <button class="page-btn" :disabled="pagination.page <= 1" @click="handleCurrentChange(pagination.page - 1)">上一页</button>
+
+            <span class="page-numbers">
+              <button v-for="pageNum in getPageNumbers()" :key="pageNum" class="page-number-btn" :class="{ active: pageNum === pagination.page }" @click="typeof pageNum === 'number' && handleCurrentChange(pageNum)">
+                {{ pageNum }}
+              </button>
+            </span>
+
+            <button class="page-btn" :disabled="pagination.page * pagination.pageSize >= pagination.total" @click="handleCurrentChange(pagination.page + 1)">下一页</button>
+
+            <div class="page-jump">
+              <span>前往</span>
+              <input type="number" v-model.number="jumpPage" min="1" :max="Math.ceil(pagination.total / pagination.pageSize)" class="page-jump-input" />
+              <span>页</span>
+              <button class="page-btn" @click="jumpToPage">确定</button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="photo-info">
-            <div class="info-row">
-              <div class="info-item">
-                <span class="info-label">照片ID:</span>
-                <span class="info-value">{{ currentPhoto.photoId }}</span>
+      <!-- 添加/编辑照片对话框 -->
+      <div v-if="dialogVisible" class="modal-overlay" @click.self="dialogVisible = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>{{ dialogType === 'add' ? '添加照片' : '编辑照片' }}</h3>
+            <button class="close-btn" @click="dialogVisible = false">&times;</button>
+          </div>
+
+          <form class="photo-form" @submit.prevent="submitForm">
+            <div class="form-group">
+              <label for="photoName">照片名称 <span class="required">*</span></label>
+              <input type="text" id="photoName" v-model="photoForm.photoName" placeholder="请输入照片名称" class="form-input" required />
+            </div>
+
+            <div class="form-group">
+              <label for="spotNameForm">景点名称 <span class="required">*</span></label>
+              <select id="spotNameForm" v-model="photoForm.spotName" class="form-input" required>
+                <option value="" disabled>请选择景点名称</option>
+                <option v-for="spot in spotList" :key="spot.spotId" :value="spot.spotName">
+                  {{ spot.spotName }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="maker">拍摄者</label>
+              <input type="text" id="maker" v-model="photoForm.maker" placeholder="请输入拍摄者" class="form-input" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="lat">纬度</label>
+                <input type="text" id="lat" v-model="photoForm.lat" placeholder="纬度" class="form-input" />
               </div>
-              <div class="info-item">
-                <span class="info-label">照片名称:</span>
-                <span class="info-value">{{ currentPhoto.photoName }}</span>
+              <div class="form-separator">-</div>
+              <div class="form-group">
+                <label for="lng">经度</label>
+                <input type="text" id="lng" v-model="photoForm.lng" placeholder="经度" class="form-input" />
               </div>
             </div>
 
-            <div class="info-row">
-              <div class="info-item">
-                <span class="info-label">景点名称:</span>
-                <span class="info-value">{{ currentPhoto.spotName }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">拍摄者:</span>
-                <span class="info-value">{{ currentPhoto.maker }}</span>
+            <div class="form-actions">
+              <button type="button" class="btn btn-default" @click="dialogVisible = false">取消</button>
+              <button type="submit" class="btn btn-primary">确定</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 查看照片详情对话框 -->
+      <div v-if="viewDialogVisible" class="modal-overlay" @click.self="viewDialogVisible = false">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h3>照片详情</h3>
+            <button class="close-btn" @click="viewDialogVisible = false">&times;</button>
+          </div>
+
+          <div v-if="currentPhoto" class="photo-detail">
+            <div class="photo-image">
+              <img :src="currentPhoto.photoUrl" :alt="currentPhoto.photoName" class="detail-image" @error="handleDetailImageError" />
+              <div v-if="!currentPhoto.photoUrl" class="image-error-large">
+                <span>无法加载图片</span>
               </div>
             </div>
 
-            <div class="info-row">
-              <div class="info-item">
-                <span class="info-label">拍摄时间:</span>
-                <span class="info-value">{{ currentPhoto.createDateTime }}</span>
+            <div class="photo-info">
+              <div class="info-row">
+                <div class="info-item">
+                  <span class="info-label">照片ID:</span>
+                  <span class="info-value">{{ currentPhoto.photoId }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">照片名称:</span>
+                  <span class="info-value">{{ currentPhoto.photoName }}</span>
+                </div>
               </div>
-              <div class="info-item">
-                <span class="info-label">更新时间:</span>
-                <span class="info-value">{{ currentPhoto.updateDateTime || '无' }}</span>
-              </div>
-            </div>
 
-            <div class="info-row">
-              <div class="info-item">
-                <span class="info-label">经纬度:</span>
-                <span class="info-value">{{ currentPhoto.lat || '无' }}, {{ currentPhoto.lng || '无' }}</span>
+              <div class="info-row">
+                <div class="info-item">
+                  <span class="info-label">景点名称:</span>
+                  <span class="info-value">{{ currentPhoto.spotName }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">拍摄者:</span>
+                  <span class="info-value">{{ currentPhoto.maker }}</span>
+                </div>
               </div>
-            </div>
 
-            <div class="info-row">
-              <div class="info-item full-width">
-                <span class="info-label">照片URL:</span>
-                <a :href="currentPhoto.photoUrl" target="_blank" class="info-link">{{ currentPhoto.photoUrl }}</a>
+              <div class="info-row">
+                <div class="info-item">
+                  <span class="info-label">拍摄时间:</span>
+                  <span class="info-value">{{ currentPhoto.createDateTime }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">更新时间:</span>
+                  <span class="info-value">{{ currentPhoto.updateDateTime || '无' }}</span>
+                </div>
               </div>
-            </div>
 
-            <div class="info-row">
-              <div class="info-item full-width">
-                <span class="info-label">缩略图URL:</span>
-                <a :href="currentPhoto.thumbnailUrl" target="_blank" class="info-link">{{ currentPhoto.thumbnailUrl }}</a>
+              <div class="info-row">
+                <div class="info-item">
+                  <span class="info-label">经纬度:</span>
+                  <span class="info-value">{{ currentPhoto.lat || '无' }}, {{ currentPhoto.lng || '无' }}</span>
+                </div>
               </div>
-            </div>
 
-            <div class="info-row" v-if="currentPhoto.exif">
-              <div class="info-item full-width">
-                <span class="info-label">EXIF信息:</span>
-                <div class="exif-container">
-                  <pre>{{ formatExif(currentPhoto.exif) }}</pre>
+              <div class="info-row">
+                <div class="info-item full-width">
+                  <span class="info-label">照片URL:</span>
+                  <a :href="currentPhoto.photoUrl" target="_blank" class="info-link">{{ currentPhoto.photoUrl }}</a>
+                </div>
+              </div>
+
+              <div class="info-row">
+                <div class="info-item full-width">
+                  <span class="info-label">缩略图URL:</span>
+                  <a :href="currentPhoto.thumbnailUrl" target="_blank" class="info-link">{{ currentPhoto.thumbnailUrl }}</a>
+                </div>
+              </div>
+
+              <div class="info-row" v-if="currentPhoto.exif">
+                <div class="info-item full-width">
+                  <span class="info-label">EXIF信息:</span>
+                  <div class="exif-container">
+                    <pre>{{ formatExif(currentPhoto.exif) }}</pre>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 上传照片对话框 -->
-    <div v-if="uploadDialogVisible" class="modal-overlay" @click.self="uploadDialogVisible = false">
-      <div class="modal-content modal-large">
-        <div class="modal-header">
-          <h3>上传照片</h3>
-          <button class="close-btn" @click="uploadDialogVisible = false">&times;</button>
+      <!-- 上传照片对话框 -->
+      <div v-if="uploadDialogVisible" class="modal-overlay" @click.self="uploadDialogVisible = false">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h3>上传照片</h3>
+            <button class="close-btn" @click="uploadDialogVisible = false">&times;</button>
+          </div>
+
+          <div class="upload-content">
+            <PhotoUpdate @upload-success="handleUploadSuccess" />
+          </div>
         </div>
+      </div>
 
-        <div class="upload-content">
-          <PhotoUpdate @upload-success="handleUploadSuccess" />
+      <!-- 图片预览对话框 -->
+      <div v-if="previewVisible" class="modal-overlay" @click.self="previewVisible = false">
+        <div class="modal-content modal-preview">
+          <div class="modal-header">
+            <h3>图片预览</h3>
+            <button class="close-btn" @click="previewVisible = false">&times;</button>
+          </div>
+
+          <div class="preview-content">
+            <img :src="previewUrl" alt="预览图片" @error="handlePreviewError" />
+            <div v-if="!previewUrl" class="image-error-large">
+              <span>无法加载图片</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 图片预览对话框 -->
-    <div v-if="previewVisible" class="modal-overlay" @click.self="previewVisible = false">
-      <div class="modal-content modal-preview">
-        <div class="modal-header">
-          <h3>图片预览</h3>
-          <button class="close-btn" @click="previewVisible = false">&times;</button>
+    <!-- 景点管理区域 -->
+    <div v-else-if="activeTab === 'spot'">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>景点列表</h3>
+          <button class="btn btn-primary" @click="showAddSpotDialog">添加景点</button>
         </div>
 
-        <div class="preview-content">
-          <img :src="previewUrl" alt="预览图片" @error="handlePreviewError" />
-          <div v-if="!previewUrl" class="image-error-large">
-            <span>无法加载图片</span>
-          </div>
+        <div v-if="loading" class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
         </div>
+
+        <table v-else class="data-table" style="width: 100%">
+          <thead>
+            <tr>
+              <th width="80">ID</th>
+              <th>景点名称</th>
+              <th>景点描述</th>
+              <th>景点图片</th>
+              <th>旅游时间</th>
+              <th width="200">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="spot in spotList" :key="spot.spotId">
+              <td>{{ spot.spotId }}</td>
+              <td>{{ spot.spotName }}</td>
+              <td>{{ spot.spotDesc || '无描述' }}</td>
+              <td>
+                <div class="thumbnail-container">
+                  <img :src="spot.spotPic" :alt="spot.spotName" class="thumbnail-image" @click="previewImage(spot.spotPic)" @error="handleImageError" />
+                  <div v-if="!spot.spotPic" class="image-error">
+                    <span>无图片</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ spot.travelTime || '无信息' }}</td>
+              <td>
+                <button class="btn-link btn-link-primary" @click="handleEditSpot(spot)">编辑</button>
+                <button class="btn-link btn-link-danger" @click="confirmDeleteSpot(spot.spotId, spot.spotName)">删除</button>
+              </td>
+            </tr>
+            <tr v-if="spotList.length === 0">
+              <td colspan="6" class="no-data">暂无数据</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -283,15 +343,101 @@
             <div class="input-hint">景点描述有助于更好地管理和识别景点</div>
           </div>
 
+          <div class="form-group">
+            <label for="newSpotPic">景点图片</label>
+            <input type="text" id="newSpotPic" v-model="spotForm.spotPic" placeholder="请输入景点图片URL" class="form-input" />
+            <div class="input-hint">请提供景点的代表性图片URL</div>
+          </div>
+
+          <div class="form-group">
+            <label for="newTravelTime">旅游时间</label>
+            <input type="text" id="newTravelTime" v-model="spotForm.travelTime" placeholder="如：春季、秋季、全年适宜等" class="form-input" />
+            <div class="input-hint">请输入推荐旅游的时间或季节</div>
+          </div>
+
           <div class="form-actions">
-            <button type="button" class="btn btn-default" @click="addSpotDialogVisible = false">
-              <i class="btn-icon-cancel"></i> 取消
-            </button>
-            <button type="submit" class="btn btn-primary">
-              <i class="btn-icon-confirm"></i> 确定添加
-            </button>
+            <button type="button" class="btn btn-default" @click="addSpotDialogVisible = false"><i class="btn-icon-cancel"></i> 取消</button>
+            <button type="submit" class="btn btn-primary"><i class="btn-icon-confirm"></i> 确定添加</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- 编辑景点对话框 -->
+    <div v-if="editSpotDialogVisible" class="modal-overlay" @click.self="editSpotDialogVisible = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>编辑景点</h3>
+          <button class="close-btn" @click="editSpotDialogVisible = false">&times;</button>
+        </div>
+
+        <form class="spot-form" @submit.prevent="submitEditSpotForm">
+          <div class="form-group">
+            <label for="editSpotName">景点名称 <span class="required">*</span></label>
+            <input type="text" id="editSpotName" v-model="editSpotForm.spotName" placeholder="请输入景点名称" class="form-input" required />
+            <div class="input-hint">请输入准确的景点名称，该名称将用于照片分类</div>
+          </div>
+
+          <div class="form-group">
+            <label for="editSpotDesc">景点描述</label>
+            <textarea id="editSpotDesc" v-model="editSpotForm.spotDesc" placeholder="请输入景点描述，如景点特色、位置等信息" class="form-textarea" rows="4"></textarea>
+            <div class="input-hint">景点描述有助于更好地管理和识别景点</div>
+          </div>
+
+          <div class="form-group">
+            <label for="editSpotPic">景点图片</label>
+            <input type="text" id="editSpotPic" v-model="editSpotForm.spotPic" placeholder="请输入景点图片URL" class="form-input" />
+            <div class="input-hint">请提供景点的代表性图片URL</div>
+          </div>
+
+          <div class="form-group">
+            <label for="editTravelTime">旅游时间</label>
+            <input type="text" id="editTravelTime" v-model="editSpotForm.travelTime" placeholder="如：春季、秋季、全年适宜等" class="form-input" />
+            <div class="input-hint">请输入推荐旅游的时间或季节</div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-default" @click="editSpotDialogVisible = false"><i class="btn-icon-cancel"></i> 取消</button>
+            <button type="submit" class="btn btn-primary"><i class="btn-icon-confirm"></i> 确定修改</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 设置景点图片对话框 -->
+    <div v-if="setSpotImageDialogVisible" class="modal-overlay" @click.self="setSpotImageDialogVisible = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>设为景点缩略图</h3>
+          <button class="close-btn" @click="setSpotImageDialogVisible = false">&times;</button>
+        </div>
+
+        <div class="set-spot-image-content">
+          <div class="photo-preview">
+            <img :src="selectedPhoto?.photoUrl" :alt="selectedPhoto?.photoName" class="preview-image" @error="handlePreviewError" />
+            <div v-if="!selectedPhoto?.photoUrl" class="image-error-large">
+              <span>无法加载图片</span>
+            </div>
+          </div>
+
+          <form class="spot-form" @submit.prevent="submitSetSpotImage">
+            <div class="form-group">
+              <label for="targetSpot">选择景点 <span class="required">*</span></label>
+              <select id="targetSpot" v-model="setSpotImageForm.spotId" class="form-input" required>
+                <option value="" disabled>请选择景点</option>
+                <option v-for="spot in spotList" :key="spot.spotId" :value="spot.spotId">
+                  {{ spot.spotName }}
+                </option>
+              </select>
+              <div class="input-hint">请选择要设置此图片作为代表图片的景点</div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-default" @click="setSpotImageDialogVisible = false"><i class="btn-icon-cancel"></i> 取消</button>
+              <button type="submit" class="btn btn-primary"><i class="btn-icon-confirm"></i> 确定设置</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -301,9 +447,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import PhotoUpdate from '@/components/photoUpdate/PhotoUpdate.vue'
 import { getPhotoList, getPhotosBySpotName, getPhotoById, updatePhoto, deletePhoto } from '@/apis/photo/photoApi'
-import { getAllSpots, addSpot } from '@/apis/spotName/spotNameApi'
+import { getAllSpots, addSpot, updateSpot, deleteSpot, getSpotById } from '@/apis/spotName/spotNameApi'
 import type { PhotoVO, PhotoPO, PhotoDTO } from '@/apis/photo/photoTypes'
-import type { Spot } from '@/apis/spotName/spotNameTypes'
+import type { Spot, SpotPO } from '@/apis/spotName/spotNameTypes'
+
+// 当前激活的标签页
+const activeTab = ref<'photo' | 'spot'>('photo')
 
 // 筛选表单
 const filterForm = reactive({
@@ -339,6 +488,8 @@ const viewDialogVisible = ref(false)
 const uploadDialogVisible = ref(false)
 const previewVisible = ref(false)
 const addSpotDialogVisible = ref(false)
+const editSpotDialogVisible = ref(false)
+const setSpotImageDialogVisible = ref(false)
 
 // 对话框类型
 const dialogType = ref<'add' | 'edit'>('add')
@@ -366,8 +517,28 @@ const previewUrl = ref('')
 // 景点表单
 const spotForm = reactive({
   spotName: '',
-  spotDesc: ''
+  spotDesc: '',
+  spotPic: '',
+  travelTime: '',
 })
+
+// 编辑景点表单
+const editSpotForm = reactive({
+  spotId: 0,
+  spotName: '',
+  spotDesc: '',
+  spotPic: '',
+  travelTime: '',
+})
+
+// 设置景点图片表单
+const setSpotImageForm = reactive({
+  spotId: 0,
+  photoUrl: '',
+})
+
+// 当前选中的照片
+const selectedPhoto = ref<PhotoVO | null>(null)
 
 // 格式化后的日期时间（用于input[type="datetime-local"]）
 const formattedDateTime = computed({
@@ -386,6 +557,11 @@ onMounted(() => {
   fetchPhotoList()
   fetchSpotList()
 })
+
+// 切换标签页
+const switchTab = (tab: 'photo' | 'spot') => {
+  activeTab.value = tab
+}
 
 // 获取照片列表
 const fetchPhotoList = async () => {
@@ -701,11 +877,16 @@ const submitSpotForm = async () => {
       return
     }
 
-    // 调用添加景点API
-    const response = await addSpot({
+    // 构建SpotPO对象
+    const spotData: SpotPO = {
       spotName: spotForm.spotName.trim(),
-      spotDesc: spotForm.spotDesc.trim()
-    })
+      spotDesc: spotForm.spotDesc.trim(),
+      spotPic: spotForm.spotPic.trim(),
+      travelTime: spotForm.travelTime.trim(),
+    }
+
+    // 调用添加景点API
+    const response = await addSpot(spotData)
 
     if (response && response.data && response.data.code === 0) {
       // 添加成功
@@ -722,6 +903,150 @@ const submitSpotForm = async () => {
     alert('添加景点时发生异常: ' + (error instanceof Error ? error.message : '未知错误'))
   }
 }
+
+// 编辑景点
+const handleEditSpot = async (spot: Spot) => {
+  try {
+    // 获取景点详细信息
+    const response = await getSpotById(spot.spotId)
+    if (response.data.code === 0 && response.data.data) {
+      const detail = response.data.data
+
+      // 填充编辑表单
+      editSpotForm.spotId = detail.spotId
+      editSpotForm.spotName = detail.spotName
+      editSpotForm.spotDesc = detail.spotDesc
+      editSpotForm.spotPic = detail.spotPic
+      editSpotForm.travelTime = detail.travelTime
+
+      editSpotDialogVisible.value = true
+    } else {
+      console.error('获取景点详情失败:', response.data.message)
+      alert('获取景点详情失败: ' + response.data.message)
+    }
+  } catch (error) {
+    console.error('获取景点详情异常:', error)
+    alert('获取景点详情时发生异常')
+  }
+}
+
+// 确认删除景点
+const confirmDeleteSpot = (spotId: number, spotName: string) => {
+  if (confirm(`确定要删除景点"${spotName}"吗？此操作不可撤销。`)) {
+    handleDeleteSpot(spotId)
+  }
+}
+
+// 处理删除景点
+const handleDeleteSpot = async (spotId: number) => {
+  try {
+    const response = await deleteSpot(spotId)
+    if (response.data.code === 0) {
+      // 删除成功，刷新列表
+      alert('删除景点成功')
+      fetchSpotList()
+    } else {
+      console.error('删除景点失败:', response.data.message)
+      alert('删除景点失败: ' + response.data.message)
+    }
+  } catch (error) {
+    console.error('删除景点异常:', error)
+    alert('删除景点时发生异常')
+  }
+}
+
+// 提交编辑景点表单
+const submitEditSpotForm = async () => {
+  try {
+    // 验证表单
+    if (!editSpotForm.spotName.trim()) {
+      alert('请输入景点名称')
+      return
+    }
+
+    // 构建SpotPO对象
+    const spotData: SpotPO = {
+      spotName: editSpotForm.spotName.trim(),
+      spotDesc: editSpotForm.spotDesc.trim(),
+      spotPic: editSpotForm.spotPic.trim(),
+      travelTime: editSpotForm.travelTime.trim(),
+    }
+
+    // 调用更新景点API
+    const response = await updateSpot(editSpotForm.spotId, spotData)
+
+    if (response && response.data && response.data.code === 0) {
+      // 更新成功
+      alert('更新景点成功')
+      editSpotDialogVisible.value = false
+      // 刷新景点列表
+      fetchSpotList()
+    } else {
+      console.error('更新景点失败:', response?.data?.message || '未知错误')
+      alert('更新景点失败: ' + (response?.data?.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('更新景点异常:', error)
+    alert('更新景点时发生异常: ' + (error instanceof Error ? error.message : '未知错误'))
+  }
+}
+
+// 显示设置景点图片对话框
+const showSetSpotImageDialog = (photo: PhotoVO) => {
+  selectedPhoto.value = photo
+  setSpotImageForm.spotId = 0 // 重置选择
+  setSpotImageForm.photoUrl = photo.thumbnailUrl || photo.photoUrl || ''
+  setSpotImageDialogVisible.value = true
+}
+
+// 提交设置景点图片表单
+const submitSetSpotImage = async () => {
+  try {
+    // 验证表单
+    if (!setSpotImageForm.spotId) {
+      alert('请选择景点')
+      return
+    }
+
+    if (!setSpotImageForm.photoUrl) {
+      alert('照片URL无效')
+      return
+    }
+
+    // 获取当前景点信息
+    const spotResponse = await getSpotById(setSpotImageForm.spotId)
+    if (spotResponse.data.code !== 0 || !spotResponse.data.data) {
+      alert('获取景点信息失败')
+      return
+    }
+
+    const spotInfo = spotResponse.data.data
+    // 只更新景点图片，保留其他原始值
+    const spotData: SpotPO = {
+      spotName: spotInfo.spotName,
+      spotDesc: spotInfo.spotDesc, // 保留原始值，即使是null
+      spotPic: setSpotImageForm.photoUrl, // 只更新这个字段
+      travelTime: spotInfo.travelTime // 保留原始值，即使是null
+    }
+
+    // 调用更新景点API
+    const response = await updateSpot(setSpotImageForm.spotId, spotData)
+
+    if (response && response.data && response.data.code === 0) {
+      // 更新成功
+      alert('设置景点图片成功')
+      setSpotImageDialogVisible.value = false
+      // 刷新景点列表
+      fetchSpotList()
+    } else {
+      console.error('设置景点图片失败:', response?.data?.message || '未知错误')
+      alert('设置景点图片失败: ' + (response?.data?.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('设置景点图片异常:', error)
+    alert('设置景点图片时发生异常: ' + (error instanceof Error ? error.message : '未知错误'))
+  }
+}
 </script>
 
 <style scoped>
@@ -729,6 +1054,33 @@ const submitSpotForm = async () => {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.tab-navigation {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: #606266;
+  transition: all 0.3s;
+}
+
+.tab-btn.active {
+  color: #409eff;
+  border-bottom-color: #409eff;
+  font-weight: 500;
+}
+
+.tab-btn:hover {
+  color: #409eff;
 }
 
 .filter-card {
@@ -1233,17 +1585,37 @@ const submitSpotForm = async () => {
 }
 
 .btn-icon-cancel::before {
-  content: "✕";
+  content: '✕';
   margin-right: 5px;
 }
 
 .btn-icon-confirm::before {
-  content: "✓";
+  content: '✓';
   margin-right: 5px;
 }
 
 .spot-form .form-actions {
   margin-top: 25px;
   justify-content: flex-end;
+}
+
+.set-spot-image-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.photo-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 </style>
