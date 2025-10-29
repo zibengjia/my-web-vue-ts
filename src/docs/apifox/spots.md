@@ -99,6 +99,8 @@ POST /spots
 ```json
 {
   "spotName": "string",
+  "lng": "string",
+  "lat": "string",
   "spotDesc": "string",
   "spotPic": "string",
   "travelTime": "string"
@@ -170,6 +172,8 @@ PUT /spots/{spotId}
 ```json
 {
   "spotName": "string",
+  "lng": "string",
+  "lat": "string",
   "spotDesc": "string",
   "spotPic": "string",
   "travelTime": "string"
@@ -266,6 +270,8 @@ DELETE /spots/{spotId}
 {
   "spotId": 0,
   "spotName": "string",
+  "lng": "string",
+  "lat": "string",
   "spotDesc": "string",
   "spotPic": "string",
   "travelTime": "string"
@@ -279,6 +285,8 @@ DELETE /spots/{spotId}
 |---|---|---|---|---|---|
 |spotId|integer(int64)|false|none||景点ID|
 |spotName|string|false|none||景点名称|
+|lng|string|false|none||景点经度|
+|lat|string|false|none||景点纬度|
 |spotDesc|string|false|none||景点描述|
 |spotPic|string|false|none||景点图片|
 |travelTime|string|false|none||旅游时间|
@@ -298,6 +306,8 @@ DELETE /spots/{spotId}
     {
       "spotId": 0,
       "spotName": "string",
+      "lng": "string",
+      "lat": "string",
       "spotDesc": "string",
       "spotPic": "string",
       "travelTime": "string"
@@ -329,6 +339,8 @@ DELETE /spots/{spotId}
   "data": {
     "spotId": 0,
     "spotName": "string",
+    "lng": "string",
+    "lat": "string",
     "spotDesc": "string",
     "spotPic": "string",
     "travelTime": "string"
@@ -355,6 +367,8 @@ DELETE /spots/{spotId}
 ```json
 {
   "spotName": "string",
+  "lng": "string",
+  "lat": "string",
   "spotDesc": "string",
   "spotPic": "string",
   "travelTime": "string"
@@ -367,6 +381,8 @@ DELETE /spots/{spotId}
 |名称|类型|必选|约束|中文名|说明|
 |---|---|---|---|---|---|
 |spotName|string|false|none||景点名称|
+|lng|string|false|none||景点经度|
+|lat|string|false|none||景点纬度|
 |spotDesc|string|false|none||景点描述|
 |spotPic|string|false|none||景点图片(缩略图)|
 |travelTime|string|false|none||旅游时间|

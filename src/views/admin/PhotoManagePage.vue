@@ -66,7 +66,7 @@
               <td>
                 <button class="btn-link btn-link-primary" @click="handleEdit(item)">编辑</button>
                 <button class="btn-link btn-link-primary" @click="handleView(item)">查看</button>
-                <button class="btn-link btn-link-primary" @click="showSetSpotImageDialog(item)">设为景点缩略图</button>
+                <button class="btn-link btn-link-primary" @click="showSetSpotImageDialog(item)">设为景点图</button>
                 <button class="btn-link btn-link-danger" @click="confirmDelete(item.photoId)">删除</button>
               </td>
             </tr>
@@ -291,6 +291,8 @@
               <th>景点名称</th>
               <th>景点描述</th>
               <th>景点图片</th>
+              <th>经度</th>
+              <th>纬度</th>
               <th>旅游时间</th>
               <th width="200">操作</th>
             </tr>
@@ -308,6 +310,8 @@
                   </div>
                 </div>
               </td>
+              <td>{{ spot.lng || '无信息' }}</td>
+              <td>{{ spot.lat || '无信息' }}</td>
               <td>{{ spot.travelTime || '无信息' }}</td>
               <td>
                 <button class="btn-link btn-link-primary" @click="handleEditSpot(spot)">编辑</button>
@@ -315,7 +319,7 @@
               </td>
             </tr>
             <tr v-if="spotList.length === 0">
-              <td colspan="6" class="no-data">暂无数据</td>
+              <td colspan="8" class="no-data">暂无数据</td>
             </tr>
           </tbody>
         </table>
@@ -352,7 +356,21 @@
           <div class="form-group">
             <label for="newTravelTime">旅游时间</label>
             <input type="text" id="newTravelTime" v-model="spotForm.travelTime" placeholder="如：春季、秋季、全年适宜等" class="form-input" />
-            <div class="input-hint">请输入推荐旅游的时间或季节</div>
+            <div class="input-hint">请输入旅游的时间或季节</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newLng">经度</label>
+              <input type="text" id="newLng" v-model="spotForm.lng" placeholder="经度" class="form-input" />
+              <div class="input-hint">请输入景点经度坐标</div>
+            </div>
+            <div class="form-separator">-</div>
+            <div class="form-group">
+              <label for="newLat">纬度</label>
+              <input type="text" id="newLat" v-model="spotForm.lat" placeholder="纬度" class="form-input" />
+              <div class="input-hint">请输入景点纬度坐标</div>
+            </div>
           </div>
 
           <div class="form-actions">
@@ -394,6 +412,20 @@
             <label for="editTravelTime">旅游时间</label>
             <input type="text" id="editTravelTime" v-model="editSpotForm.travelTime" placeholder="如：春季、秋季、全年适宜等" class="form-input" />
             <div class="input-hint">请输入推荐旅游的时间或季节</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editLng">经度</label>
+              <input type="text" id="editLng" v-model="editSpotForm.lng" placeholder="经度" class="form-input" />
+              <div class="input-hint">请输入景点经度坐标</div>
+            </div>
+            <div class="form-separator">-</div>
+            <div class="form-group">
+              <label for="editLat">纬度</label>
+              <input type="text" id="editLat" v-model="editSpotForm.lat" placeholder="纬度" class="form-input" />
+              <div class="input-hint">请输入景点纬度坐标</div>
+            </div>
           </div>
 
           <div class="form-actions">
@@ -520,6 +552,8 @@ const spotForm = reactive({
   spotDesc: '',
   spotPic: '',
   travelTime: '',
+  lng: '',
+  lat: '',
 })
 
 // 编辑景点表单
@@ -529,6 +563,8 @@ const editSpotForm = reactive({
   spotDesc: '',
   spotPic: '',
   travelTime: '',
+  lng: '',
+  lat: '',
 })
 
 // 设置景点图片表单
@@ -883,6 +919,8 @@ const submitSpotForm = async () => {
       spotDesc: spotForm.spotDesc.trim(),
       spotPic: spotForm.spotPic.trim(),
       travelTime: spotForm.travelTime.trim(),
+      lng: spotForm.lng.trim(),
+      lat: spotForm.lat.trim(),
     }
 
     // 调用添加景点API
@@ -918,6 +956,8 @@ const handleEditSpot = async (spot: Spot) => {
       editSpotForm.spotDesc = detail.spotDesc
       editSpotForm.spotPic = detail.spotPic
       editSpotForm.travelTime = detail.travelTime
+      editSpotForm.lng = detail.lng || ''
+      editSpotForm.lat = detail.lat || ''
 
       editSpotDialogVisible.value = true
     } else {
@@ -1026,7 +1066,7 @@ const submitSetSpotImage = async () => {
       spotName: spotInfo.spotName,
       spotDesc: spotInfo.spotDesc, // 保留原始值，即使是null
       spotPic: setSpotImageForm.photoUrl, // 只更新这个字段
-      travelTime: spotInfo.travelTime // 保留原始值，即使是null
+      travelTime: spotInfo.travelTime, // 保留原始值，即使是null
     }
 
     // 调用更新景点API

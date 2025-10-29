@@ -1,7 +1,6 @@
 import AMapLoader from '@amap/amap-jsapi-loader'
 interface Point {
   lnglat: [number, number]
-  imgUrl: string
   thumbnailUrl?: string
   name?: string
   time?: string

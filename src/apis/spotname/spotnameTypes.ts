@@ -2,6 +2,8 @@
 export interface SpotDTO {
   spotId: number
   spotName: string
+  lng: string
+  lat: string
   spotDesc: string
   spotPic: string
   travelTime: string
@@ -10,6 +12,8 @@ export interface SpotDTO {
 // 景点PO类型（不包含ID，用于添加和更新）
 export interface SpotPO {
   spotName: string
+  lng: string
+  lat: string
   spotDesc: string
   spotPic: string
   travelTime: string
